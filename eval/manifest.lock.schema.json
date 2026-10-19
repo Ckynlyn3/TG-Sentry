@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Structural schema; runtime semantic, freeze, digests and admissibility gates in internal/eval/config.go also apply.",
+  "properties": {
+    "acceptance_seed": {
+      "type": "string"
+    },
+    "config_sha256": {
+      "type": "string"
+    },
+    "field_maps": {
+      "additionalProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "label": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "format",
+          "text",
+          "label",
+          "category",
+          "surface"
+        ],
+        "type": "object"
+      },
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "files": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "type": "integer"
+          },
+          "dataset": {
+            "type": "string"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "member": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "variant": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset",
+          "path",
+          "url",
+          "sha256",
+          "bytes",
+          "fetched_at"
+        ],
+        "type": "object"
+      },
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "manifest_sha256": {
+      "type": "string"
+    },
+    "tree_hash": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    }
+  },
+  "required": [
+    "version",
+    "manifest_sha256",
+    "config_sha256",
+    "acceptance_seed",
+    "tree_hash",
+    "files"
+  ],
+  "title": "TG-Sentry eval manifest.lock",
+  "type": "object"
+}

@@ -1,0 +1,128 @@
+/* Ported verbatim from docs/design/mockups/assets/tokens.css (design contract v1, §9); only font URLs changed (served from public/fonts).
+   Semantic layer only: components use --surface-*, --text-*, --border-*, --status-*.
+   Brand (--brand-*) is used for the mark, links, selected nav and focus — never for status.
+   Light values derive from IBM Carbon gray/red/orange/green steps (awesome-design-md ibm/DESIGN.md);
+   dark layering derives from linear.app/DESIGN.md. Every text pair is measured by
+   evidence/contrast.mjs; do not edit a value without re-running it. */
+
+@font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("/fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); }
+
+:root {
+  color-scheme: light;
+  /* surfaces */
+  --surface-canvas: #f4f4f2;   /* page ground, warm paper */
+  --surface-1: #ffffff;        /* tables, panels */
+  --surface-2: #ececea;        /* hover, table header */
+  --surface-sunken: #efefec;   /* code / evidence wells */
+  --surface-inverse: #161616;
+  --surface-overlay: rgb(22 22 22 / 0.48);
+  /* text */
+  --text-primary: #161616;
+  --text-secondary: #525252;
+  --text-tertiary: #6b6b6b;
+  --text-on-inverse: #f4f4f4;
+  --text-on-status: #ffffff;
+  /* borders */
+  --border-subtle: #e0e0dc;    /* decorative hairline, no 3:1 requirement */
+  --border-strong: #8a8a86;    /* inputs, switches: >= 3:1 (SC 1.4.11) */
+  /* brand — named local exception: hue chosen for identity, validated by contrast */
+  --brand: #3b3fbf;
+  --brand-hover: #2e3199;
+  --brand-soft: #ecedfb;
+  --text-on-brand: #ffffff;
+  --focus-ring: #3b3fbf;
+  /* primary action = ink (Trust Gateway tokens.css precedent: colour reserved for meaning) */
+  --action: #161616;
+  --action-hover: #393939;
+  --text-on-action: #ffffff;
+  /* status — action is colour + icon + text; severity is a 4-step glyph + text */
+  --status-block: #a2191f;     /* 拦截 */
+  --status-block-soft: #fff1f1;
+  --status-alert: #8a3800;     /* 提醒 */
+  --status-alert-soft: #fff2e8;
+  --status-ok: #0e6027;        /* 防护中 / healthy */
+  --status-ok-soft: #defbe6;
+  --status-degraded: #8a3800;  /* 降级 shares alert hue on purpose: both need attention */
+  --status-unknown: #6b6b6b;   /* 未知 / 无数据: never shown as zero */
+  --status-unknown-soft: #ececea;
+  --sev-fill: #161616;
+  --sev-empty: #c6c6c2;
+  /* type — Ant Design base 14/22, TG role scale */
+  --font-sans: "IBM Plex Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei",
+    "Noto Sans CJK SC", "Source Han Sans SC", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, "Noto Sans Mono CJK SC", monospace;
+  --type-label: 12px; --lead-label: 20px;
+  --type-ui: 14px; --lead-ui: 22px;
+  --type-prose: 16px; --lead-prose: 26px;
+  --type-section: 16px; --lead-section: 24px;
+  --type-page: 20px; --lead-page: 28px;
+  --type-kpi: 28px; --lead-kpi: 36px;
+  /* space — Carbon spacing scale */
+  --s-1: 2px; --s-2: 4px; --s-3: 8px; --s-4: 12px; --s-5: 16px; --s-6: 24px; --s-7: 32px; --s-8: 40px; --s-9: 48px;
+  --radius: 4px;               /* Carbon: corners 0–4px */
+  --header-h: 48px;            /* Carbon UI shell header */
+  --nav-w: 232px;
+  --row-h: 40px;               /* Carbon data table "md" */
+  /* motion — Carbon motion tokens */
+  --dur-fast: 110ms;           /* fast-02 */
+  --dur-moderate: 240ms;       /* moderate-02 */
+  --ease-productive: cubic-bezier(0.2, 0, 0.38, 0.9);
+  --ease-entrance: cubic-bezier(0, 0, 0.38, 0.9);
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.18);
+  /* data viz (design v2 §V2.3): series reuse the verdict hues so a chart never invents a new meaning;
+     "other" (log only / detected / outcome unknown) is the neutral unknown step. Graphical objects
+     need >= 3:1 against --surface-1 (SC 1.4.11), measured by evidence/contrast.mjs. */
+  --viz-block: var(--status-block);
+  --viz-alert: var(--status-alert);
+  --viz-other: #8a8a86;
+  --viz-grid: #e0e0dc;
+  --viz-axis: var(--text-tertiary);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-canvas: #0d0e10;
+  --surface-1: #141518;
+  --surface-2: #1c1d21;
+  --surface-sunken: #101114;
+  --surface-inverse: #ededef;
+  --surface-overlay: rgb(0 0 0 / 0.6);
+  --text-primary: #ededef;
+  --text-secondary: #b6bac1;
+  --text-tertiary: #8e949d;
+  --text-on-inverse: #161616;
+  --text-on-status: #0d0e10;
+  --border-subtle: #26282d;
+  --border-strong: #6c717a;
+  --brand: #a8abff;
+  --brand-hover: #c4c6ff;
+  --brand-soft: #22234a;
+  --text-on-brand: #0d0e10;
+  --focus-ring: #a8abff;
+  --action: #ededef;
+  --action-hover: #ffffff;
+  --text-on-action: #0d0e10;
+  --status-block: #ff8389;
+  --status-block-soft: #3a1518;
+  --status-alert: #ffb784;
+  --status-alert-soft: #35200f;
+  --status-ok: #6fdc8c;
+  --status-ok-soft: #0f2a18;
+  --status-degraded: #ffb784;
+  --status-unknown: #8e949d;
+  --status-unknown-soft: #1c1d21;
+  --sev-fill: #ededef;
+  --sev-empty: #3a3d44;
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+  --viz-other: #8e949d;
+  --viz-grid: #26282d;
+}

@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16.3-alpine
+    pull_policy: never
+    environment:
+      # Disposable local development placeholders, NEVER production credentials.
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: dev-only
+      POSTGRES_DB: tg_sentry_test
+    ports:
+      - "127.0.0.1:${TG_SENTRY_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./internal/teststore/postgres-dev-init.sql:/docker-entrypoint-initdb.d/10-app-role.sql:ro
+    # Health timings follow Docker's documented Compose startup-order example.
+    # https://docs.docker.com/compose/how-tos/startup-order/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  server:
+    build:
+      context: .
+      pull: false
+    environment:
+      TG_SENTRY_MIGRATION_DATABASE_URL: postgres://test:dev-only@postgres/tg_sentry_test?sslmode=disable
+      TG_SENTRY_DATABASE_URL: postgres://tg_sentry_app:dev-only@postgres/tg_sentry_test?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - server-data:/data
+    # Preserve the application's loopback-only listener; no published HTTP port.
+
+volumes:
+  postgres-data:
+  server-data:

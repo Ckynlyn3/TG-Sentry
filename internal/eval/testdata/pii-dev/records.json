@@ -1,0 +1,258 @@
+[
+  {
+    "id": "fc688844d2b11c5b9fcc51fd19fd7fe94de523690c718201bb36334b16653561",
+    "text": "SYNTHETIC FIXTURE (not a real identity): synthetic-4a81eecc@example.invalid",
+    "language": "EN",
+    "surface": "prompt",
+    "entities": [
+      {
+        "type": "Email",
+        "start_utf16": 41,
+        "end_utf16": 75
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "9a113dc49a590c588424a4f41bb58f5af4356b48fa01583598ebfbc5a1063d28",
+    "text": "SYNTHETIC FIXTURE (not a real identity): 13889866366",
+    "language": "EN",
+    "surface": "prompt",
+    "entities": [
+      {
+        "type": "Phone",
+        "start_utf16": 41,
+        "end_utf16": 52
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "19e9671ff8165f2c73ac0b5f5bddba041e3338389fe591936907cf5234b757c3",
+    "text": "SYNTHETIC FIXTURE (not a real identity): 0000003187020304",
+    "language": "EN",
+    "surface": "prompt",
+    "entities": [
+      {
+        "type": "Card",
+        "start_utf16": 41,
+        "end_utf16": 57
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "555b24df272b8e995db552ead613516c29104cf618326bc2efda798c0e4faa49",
+    "text": "SYNTHETIC FIXTURE (not a real identity): 11010519900102210X",
+    "language": "EN",
+    "surface": "prompt",
+    "entities": [
+      {
+        "type": "ID",
+        "start_utf16": 41,
+        "end_utf16": 59
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "832689e97566cb998c273af48366b25a08427ce7dc2d2573e4440d887fa2d7b8",
+    "text": "SYNTHETIC FIXTURE (not a real identity): ",
+    "language": "EN",
+    "surface": "prompt",
+    "entities": [],
+    "seed": "dev"
+  },
+  {
+    "id": "ae3b985df78b4cbffa444492c0c298cb956ce8abf04111ba63a66dcb93979108",
+    "text": "SYNTHETIC FIXTURE (not a real identity): synthetic-6ee12645@example.invalid",
+    "language": "EN",
+    "surface": "tool_result",
+    "entities": [
+      {
+        "type": "Email",
+        "start_utf16": 41,
+        "end_utf16": 75
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "62db9ce16ee4371b63432e0c0fb0ed3e26e90a28710ae105f8d52e8cda554165",
+    "text": "SYNTHETIC FIXTURE (not a real identity): 13850769152",
+    "language": "EN",
+    "surface": "tool_result",
+    "entities": [
+      {
+        "type": "Phone",
+        "start_utf16": 41,
+        "end_utf16": 52
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "8aa036af8f4f7a33d8d57a2265fbbd4a1fd5308e1a70e2ab0beadb499799fdb2",
+    "text": "SYNTHETIC FIXTURE (not a real identity): 0000000394847362",
+    "language": "EN",
+    "surface": "tool_result",
+    "entities": [
+      {
+        "type": "Card",
+        "start_utf16": 41,
+        "end_utf16": 57
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "fffbaa8841bd7eb5022f1d91831bf5d538a1d3e8ef39043fcad76b860e29c87b",
+    "text": "SYNTHETIC FIXTURE (not a real identity): 110105199001021246",
+    "language": "EN",
+    "surface": "tool_result",
+    "entities": [
+      {
+        "type": "ID",
+        "start_utf16": 41,
+        "end_utf16": 59
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "7940cb1b052bf7ac85f3519dc43056eaa37b342eabe914be5191b48085258f3e",
+    "text": "SYNTHETIC FIXTURE (not a real identity): ",
+    "language": "EN",
+    "surface": "tool_result",
+    "entities": [],
+    "seed": "dev"
+  },
+  {
+    "id": "3b90667a2c89eccc4ad520a91e9255ed202f5af757eea9522cbe54c354072a6b",
+    "text": "合成测试记录（非真实身份）：synthetic-402cfc3c@example.invalid",
+    "language": "ZH",
+    "surface": "prompt",
+    "entities": [
+      {
+        "type": "Email",
+        "start_utf16": 14,
+        "end_utf16": 48
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "2de5a1ff2b3089e32cbc0c103bf66c73655b08574d2ec70039ae597ab6db0286",
+    "text": "合成测试记录（非真实身份）：13802432001",
+    "language": "ZH",
+    "surface": "prompt",
+    "entities": [
+      {
+        "type": "Phone",
+        "start_utf16": 14,
+        "end_utf16": 25
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "412d65b9095d655d4ad5825574300cc005c3b1717318666f8bf175c5228dc30a",
+    "text": "合成测试记录（非真实身份）：0000007291878093",
+    "language": "ZH",
+    "surface": "prompt",
+    "entities": [
+      {
+        "type": "Card",
+        "start_utf16": 14,
+        "end_utf16": 30
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "92d85bd65a175af22d09ebd628e3696dc8e703ced90c7c25d4496480ca18e477",
+    "text": "合成测试记录（非真实身份）：110105199001021203",
+    "language": "ZH",
+    "surface": "prompt",
+    "entities": [
+      {
+        "type": "ID",
+        "start_utf16": 14,
+        "end_utf16": 32
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "0bf8e0ccd379cea0d5563d455ad70eca0b9b53cca650a25fd8523ffb580c1d80",
+    "text": "合成测试记录（非真实身份）：",
+    "language": "ZH",
+    "surface": "prompt",
+    "entities": [],
+    "seed": "dev"
+  },
+  {
+    "id": "c26c899ee33a3938c73d4cb1149043616c96a8a9635c7cc52d174c91b18f5dff",
+    "text": "合成测试记录（非真实身份）：synthetic-f1e4a748@example.invalid",
+    "language": "ZH",
+    "surface": "tool_result",
+    "entities": [
+      {
+        "type": "Email",
+        "start_utf16": 14,
+        "end_utf16": 48
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "d11525eb7270676c6abe3814005f9bc8687203123b05c5e9f77d13d24f430f19",
+    "text": "合成测试记录（非真实身份）：13863747408",
+    "language": "ZH",
+    "surface": "tool_result",
+    "entities": [
+      {
+        "type": "Phone",
+        "start_utf16": 14,
+        "end_utf16": 25
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "39dd349dc527f912b494d26a74564ef26c9f91249f88966986f597bdf4dcbe58",
+    "text": "合成测试记录（非真实身份）：0000004757856010",
+    "language": "ZH",
+    "surface": "tool_result",
+    "entities": [
+      {
+        "type": "Card",
+        "start_utf16": 14,
+        "end_utf16": 30
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "d8361c5d3ad65bd15303bf0f813c59fca36f0673412e49c1116b5981ab1814f8",
+    "text": "合成测试记录（非真实身份）：110105199001021828",
+    "language": "ZH",
+    "surface": "tool_result",
+    "entities": [
+      {
+        "type": "ID",
+        "start_utf16": 14,
+        "end_utf16": 32
+      }
+    ],
+    "seed": "dev"
+  },
+  {
+    "id": "b216661514be19cd10fa0a7e46cfd1d1ce514ca38122679f06b2f800682d216e",
+    "text": "合成测试记录（非真实身份）：",
+    "language": "ZH",
+    "surface": "tool_result",
+    "entities": [],
+    "seed": "dev"
+  }
+]

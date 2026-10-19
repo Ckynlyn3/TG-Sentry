@@ -1,0 +1,14 @@
+{
+  "name": "aegishook",
+  "private": true,
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "ui:build": "npm --prefix console run build",
+    "adapter:check": "npm --prefix adapter run check",
+    "test:adapter": "npm --prefix adapter test",
+    "test:go": "go test ./...",
+    "test:e2e": "npm --prefix console run test:e2e",
+    "test:opencode": "node --test adapter/opencode.test.mjs",
+    "test:notices": "node scripts/write-notices.mjs .cache/THIRD_PARTY_NOTICES.test.md"
+  }
+}

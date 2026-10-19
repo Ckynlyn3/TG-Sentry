@@ -1,0 +1,9 @@
+{
+  "name": "tg-sentry-openclaw",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "openclaw": { "extensions": ["./index.ts"] },
+  "peerDependencies": { "openclaw": "2026.10.4" },
+  "scripts": { "test": "node --test plugin.test.mjs", "test:gateway": "node gateway.test.mjs" }
+}

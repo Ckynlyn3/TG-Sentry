@@ -1,0 +1,6 @@
+# Send only Go build inputs; exclude .git, credentials, local data and caches.
+*
+!go.mod
+!go.sum
+!cmd/
+!internal/

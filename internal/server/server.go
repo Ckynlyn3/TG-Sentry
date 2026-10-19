@@ -1,0 +1,771 @@
+package server
+
+import (
+	"aegishook/internal/core"
+	"aegishook/internal/localaddr"
+	"bytes"
+	"context"
+	"crypto/subtle"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
+	"net"
+	"net/http"
+	"net/url"
+	"path"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+)
+
+type Server struct {
+	Engine                          *core.Engine
+	AdminToken, HookToken, AgentDir string
+	PublicURL                       string
+	ListenAddr                      string
+	DownloadID, ClientBinaryDir     string
+	TrustedProxies                  []string
+	UI                              fs.FS
+	mu                              sync.Mutex
+	sessions                        map[string]session
+	clock                           func() time.Time
+	oidc                            *oidcSettings
+	oidcOnce                        sync.Once
+	oidcTransactions                map[string]oidcTransaction
+	subscribers                     map[chan struct{}]struct{}
+	contentAllowedOverride          func(*http.Request) bool
+}
+
+func New(e *core.Engine, ui fs.FS, admin, hook, agentDir string) *Server {
+	s := &Server{Engine: e, UI: ui, AdminToken: admin, HookToken: hook, AgentDir: agentDir, sessions: map[string]session{}, oidcTransactions: map[string]oidcTransaction{}, subscribers: map[chan struct{}]struct{}{}}
+	e.Notify = s.publish
+	return s
+}
+func (s *Server) publish() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for ch := range s.subscribers {
+		select {
+		case ch <- struct{}{}:
+		default:
+		}
+	}
+}
+func write(w http.ResponseWriter, v any) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(v)
+}
+func fail(w http.ResponseWriter, status int, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"error": core.RedactText(err.Error())})
+}
+func read(w http.ResponseWriter, r *http.Request, v any) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, 2<<20)
+	d := json.NewDecoder(r.Body)
+	if err := d.Decode(v); err != nil {
+		fail(w, 400, errors.New("JSON 请求无效或超过 2 MB"))
+		return false
+	}
+	return true
+}
+func eq(a, b string) bool { return a != "" && subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1 }
+func (s *Server) Handler() http.Handler {
+	s.oidcOnce.Do(func() { s.oidc = readOIDCSettings(s.PublicURL, s.ListenAddr) })
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v1/auth/login", s.oidcLogin)
+	mux.HandleFunc("GET /api/v1/auth/callback", s.oidcCallback)
+	mux.HandleFunc("POST /api/v1/cli/session", s.cliSession)
+	s.clientDownloads(mux)
+	s.clientRequestRoutes(mux)
+	s.protectionRoutes(mux)
+	s.clientBundleRoutes(mux)
+	mux.HandleFunc("POST /api/v1/client/enroll", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			Code     string `json:"code"`
+			Platform string `json:"platform"`
+		}
+		if !read(w, r, &in) {
+			return
+		}
+		connection, err := s.Engine.EnrollClient(in.Code, in.Platform)
+		if err != nil {
+			fail(w, 403, err)
+			return
+		}
+		write(w, connection)
+	})
+	mux.HandleFunc("POST /api/v1/client-enrollments", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			Name string `json:"name"`
+			core.EnrollmentOptions
+		}
+		if !read(w, r, &in) {
+			return
+		}
+		code, err := s.Engine.CreateEnrollment(r.Context(), in.Name, in.EnrollmentOptions)
+		if err != nil {
+			fail(w, 400, err)
+			return
+		}
+		write(w, code)
+	})
+	mux.HandleFunc("GET /api/v1/client-enrollments", func(w http.ResponseWriter, r *http.Request) {
+		keys, err := s.Engine.Enrollments()
+		if err != nil {
+			fail(w, 500, errors.New("cannot list setup keys"))
+			return
+		}
+		write(w, keys)
+	})
+	mux.HandleFunc("DELETE /api/v1/client-enrollments/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if err := s.Engine.RevokeEnrollment(r.Context(), r.PathValue("id")); err != nil {
+			fail(w, 404, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("GET /api/v1/client-nodes", func(w http.ResponseWriter, r *http.Request) {
+		nodes, err := s.Engine.ClientNodes()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, nodes)
+	})
+	mux.HandleFunc("DELETE /api/v1/client-nodes/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if err := s.Engine.RevokeClient(r.Context(), r.PathValue("id")); err != nil {
+			fail(w, 404, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("POST /api/v1/login", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			Token string `json:"token"`
+		}
+		if !read(w, r, &in) {
+			return
+		}
+		if !eq(in.Token, s.AdminToken) {
+			fail(w, 401, errors.New("管理令牌无效"))
+			return
+		}
+		// NAMED TRANSITIONAL EXCEPTION (#12 S3 lead disposition): this browser
+		// admin-token session remains human until console S5 moves the last
+		// consumer to OIDC; remove it together with /login. Principal: §3.6a.
+		v := s.createSession(session{Kind: "human", Principal: core.Principal{Issuer: "local", Subject: "cli"}, Name: "cli", Role: core.RoleAdmin, Tenant: "default"})
+		s.setSessionCookie(w, r, v.ID)
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("POST /api/v1/logout", func(w http.ResponseWriter, r *http.Request) {
+		c, _ := r.Cookie(sessionCookieName)
+		if c != nil {
+			s.deleteSession(c.Value)
+		}
+		s.setSessionCookie(w, r, "")
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("GET /api/v1/me", func(w http.ResponseWriter, r *http.Request) {
+		v := requestSession(r)
+		write(w, map[string]any{"name": v.Name, "version": core.Version, "role": string(v.Role), "tenant": v.Tenant, "subject": v.Principal.Subject, "kind": v.Kind, "capabilities": []string{"risk-stats"}})
+	})
+	mux.HandleFunc("GET /api/v1/overview", func(w http.ResponseWriter, r *http.Request) {
+		rs, err := s.Engine.Reviews()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		instances, err := s.Engine.Instances()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		counts := map[string]int{"total": 0, "approve": 0, "reject": 0, "pending": 0}
+		today := time.Now().Format("2006-01-02")
+		for _, v := range rs {
+			if v.CreatedAt.Local().Format("2006-01-02") == today {
+				counts["total"]++
+				counts[v.Decision]++
+			}
+		}
+		if !s.contentAllowed(r) {
+			// Plan D2: reuse #16's metadata wire type; never expose diagnostics.
+			write(w, map[string]any{"counts": counts, "instances": instances, "recent": core.ProjectReviewContent(rs, false)})
+			return
+		}
+		write(w, map[string]any{"counts": counts, "instances": instances, "recent": rs, "diagnostic": s.Engine.LocalDiagnostic()})
+	})
+	mux.HandleFunc("GET /api/v1/settings", func(w http.ResponseWriter, r *http.Request) { write(w, s.Engine.Config()) })
+	mux.HandleFunc("GET /api/v1/settings/versions", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.ConfigVersions()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("GET /api/v1/settings/default-prompt", func(w http.ResponseWriter, r *http.Request) {
+		write(w, map[string]string{
+			"prompt": core.DefaultPrompt, "dataGuardPrompt": core.DataGuardPrompt,
+			"dataGuardStart": core.DataGuardStart, "dataGuardEnd": core.DataGuardEnd,
+			"dataGuardAnchor": core.DataGuardAnchor,
+		})
+	})
+	mux.HandleFunc("PUT /api/v1/settings", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			core.Settings
+			APIKey *string `json:"apiKey"`
+		}
+		if !read(w, r, &in) {
+			return
+		}
+		if err := s.Engine.SaveSettings(r.Context(), in.Settings, in.APIKey); err != nil {
+			fail(w, 400, err)
+			return
+		}
+		write(w, s.Engine.Config())
+	})
+	mux.HandleFunc("POST /api/v1/model/test", func(w http.ResponseWriter, r *http.Request) {
+		if err := s.Engine.TestModel(r.Context()); err != nil {
+			fail(w, 400, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("GET /api/v1/agents", func(w http.ResponseWriter, r *http.Request) { write(w, core.DetectAgents()) })
+	mux.HandleFunc("GET /api/v1/pi", func(w http.ResponseWriter, r *http.Request) {
+		v := core.DetectPi()
+		v["agentDir"] = s.AgentDir
+		write(w, v)
+	})
+	mux.HandleFunc("GET /api/v1/installations", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.Installations()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("POST /api/v1/installations", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			Agent   string `json:"agent"`
+			Scope   string `json:"scope"`
+			Project string `json:"project"`
+		}
+		if !read(w, r, &in) {
+			return
+		}
+		v, err := s.Engine.InstallAgent(r.Context(), in.Agent, in.Scope, in.Project, s.AgentDir)
+		if err != nil {
+			fail(w, 409, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("DELETE /api/v1/installations/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if err := s.Engine.Uninstall(r.Context(), r.PathValue("id")); err != nil {
+			fail(w, 409, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("GET /api/v1/instances", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.Instances()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("GET /api/v1/sessions", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.Instances()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("POST /api/v1/instances", func(w http.ResponseWriter, r *http.Request) {
+		var in core.Instance
+		if !read(w, r, &in) {
+			return
+		}
+		in.Installations = nil
+		if node, ok := requestClient(r); ok {
+			if in.NodeID != node.ID {
+				fail(w, 403, errors.New("设备身份不匹配"))
+				return
+			}
+			in.Platform = node.Platform
+		} else if in.NodeID != "" {
+			fail(w, 403, errors.New("远程节点须使用独立设备凭据"))
+			return
+		}
+		if in.NodeID == "" {
+			in.Installations = s.Engine.BindAgentInstallations(in.Agent, in.Cwd)
+		}
+		if err := s.Engine.Register(in); err != nil {
+			fail(w, 400, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("POST /api/v1/instances/{id}/heartbeat", func(w http.ResponseWriter, r *http.Request) {
+		if !s.ownsInstance(w, r, r.PathValue("id")) {
+			return
+		}
+		var in struct {
+			State string `json:"state"`
+		}
+		if !read(w, r, &in) {
+			return
+		}
+		if err := s.Engine.Heartbeat(r.PathValue("id"), in.State); err != nil {
+			fail(w, 409, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("POST /api/v1/instances/{id}/shutdown", func(w http.ResponseWriter, r *http.Request) {
+		if !s.ownsInstance(w, r, r.PathValue("id")) {
+			return
+		}
+		if err := s.Engine.Disconnect(r.PathValue("id")); err != nil {
+			fail(w, 409, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("POST /api/v1/reviews", func(w http.ResponseWriter, r *http.Request) {
+		var in core.ReviewInput
+		if !read(w, r, &in) {
+			return
+		}
+		if !s.ownsInstance(w, r, in.InstanceID) {
+			return
+		}
+		budget := core.ReviewRequestBudget(r.Header.Get("X-TG-Expected-Rq-Timeout-Ms"))
+		ctx, cancel := context.WithTimeout(r.Context(), budget)
+		defer cancel()
+		v, err := s.Engine.SubmitContext(ctx, in)
+		if err != nil {
+			fail(w, 409, err)
+			return
+		}
+		write(w, hookView(v))
+	})
+	mux.HandleFunc("GET /api/v1/reviews/{id}", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.Review(r.PathValue("id"))
+		if err != nil {
+			fail(w, 404, err)
+			return
+		}
+		if strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") {
+			if !s.ownsInstance(w, r, v.InstanceID) {
+				return
+			}
+			if r.URL.Query().Get("instanceId") != v.InstanceID {
+				fail(w, 403, errors.New("实例不匹配"))
+				return
+			}
+			write(w, hookView(v))
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("POST /api/v1/reviews/{id}/result", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			InstanceID string `json:"instanceId"`
+			State      string `json:"state"`
+			Result     string `json:"result"`
+		}
+		if !read(w, r, &in) {
+			return
+		}
+		if !s.ownsInstance(w, r, in.InstanceID) {
+			return
+		}
+		if err := s.Engine.Result(r.PathValue("id"), in.InstanceID, in.State, in.Result); err != nil {
+			fail(w, 409, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("GET /api/v1/usage", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.Usage()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("GET /api/v1/calls", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		contentAllowed := s.contentAllowed(r)
+		if !hasReviewPageQuery(q) {
+			v, err := s.Engine.Reviews()
+			if err != nil {
+				fail(w, 500, err)
+				return
+			}
+			if len(v) > 200 {
+				v = v[:200]
+			}
+			write(w, core.ProjectReviewContent(v, contentAllowed))
+			return
+		}
+		page, size, filter, err := reviewPageParams(q)
+		if err != nil {
+			fail(w, 400, err)
+			return
+		}
+		v, err := s.Engine.ReviewsPage(page, size, filter)
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, struct {
+			core.ReviewPage
+			Items []any `json:"items"`
+		}{v, core.ProjectReviewContent(v.Items, contentAllowed)})
+	})
+	mux.HandleFunc("GET /api/v1/calls/export", func(w http.ResponseWriter, r *http.Request) {
+		b, err := s.Engine.ExportCalls()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Disposition", `attachment; filename="aegishook-calls.json"`)
+		w.Write(b)
+	})
+	mux.HandleFunc("POST /api/v1/approvals/{id}/decision", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			Digest   string `json:"digest"`
+			Decision string `json:"decision"`
+			Comment  string `json:"comment"`
+		}
+		if !read(w, r, &in) {
+			return
+		}
+		v, err := s.Engine.Decide(r.Context(), r.PathValue("id"), in.Digest, in.Decision, in.Comment)
+		if err != nil {
+			fail(w, 409, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("GET /api/v1/rules", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.Rules()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("GET /api/v1/rules/defaults", func(w http.ResponseWriter, r *http.Request) {
+		write(w, core.BuiltinRules())
+	})
+	mux.HandleFunc("POST /api/v1/rules", func(w http.ResponseWriter, r *http.Request) {
+		var v core.Rule
+		if !read(w, r, &v) {
+			return
+		}
+		if err := s.Engine.SaveRule(r.Context(), v); err != nil {
+			fail(w, 400, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("DELETE /api/v1/rules/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if err := s.Engine.DeleteRule(r.Context(), r.PathValue("id")); err != nil {
+			fail(w, 400, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("POST /api/v1/rules/test", func(w http.ResponseWriter, r *http.Request) {
+		var v core.ReviewInput
+		if !read(w, r, &v) {
+			return
+		}
+		rules, err := s.Engine.Rules()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		d := core.Evaluate(v, rules)
+		if d == nil {
+			write(w, map[string]string{"decision": "pending", "comment": "规则未定，将进入当前审查模式"})
+			return
+		}
+		write(w, d)
+	})
+	mux.HandleFunc("GET /api/v1/scopes", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.Scopes()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("POST /api/v1/scopes", func(w http.ResponseWriter, r *http.Request) {
+		var v core.Scope
+		if !read(w, r, &v) {
+			return
+		}
+		if err := s.Engine.SaveScope(r.Context(), v); err != nil {
+			fail(w, 400, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("DELETE /api/v1/scopes/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if err := s.Engine.DeleteScope(r.Context(), r.PathValue("id")); err != nil {
+			fail(w, 400, err)
+			return
+		}
+		write(w, map[string]bool{"ok": true})
+	})
+	mux.HandleFunc("GET /api/v1/audit", func(w http.ResponseWriter, r *http.Request) {
+		v, err := s.Engine.Audits()
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		write(w, v)
+	})
+	mux.HandleFunc("GET /api/v1/risk-events/export", func(w http.ResponseWriter, r *http.Request) {
+		s.eventExport(w, r, "tg.sentry.risk.v1")
+	})
+	mux.HandleFunc("GET /api/v1/audit/export", func(w http.ResponseWriter, r *http.Request) {
+		s.eventExport(w, r, "tg.sentry.audit.v1")
+	})
+	mux.HandleFunc("GET /api/v1/session-summaries", s.sessionSummaries)
+	mux.HandleFunc("GET /api/v1/risk-events", s.riskEvents)
+	mux.HandleFunc("GET /api/v1/risk-events/stats", s.riskStats)
+	mux.HandleFunc("GET /api/v1/risk-events/{id}", s.riskEvent)
+	mux.HandleFunc("GET /api/v1/events", s.events)
+	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) { fail(w, 404, errors.New("接口不存在")) })
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" && r.Method != "HEAD" {
+			w.WriteHeader(405)
+			return
+		}
+		p := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
+		if p == "." || p == "" {
+			p = "index.html"
+		}
+		if _, err := fs.Stat(s.UI, p); err != nil {
+			p = "index.html"
+		}
+		data, err := fs.ReadFile(s.UI, p)
+		if err != nil {
+			http.Error(w, "UI resource unavailable", 500)
+			return
+		}
+		http.ServeContent(w, r, p, time.Time{}, bytes.NewReader(data))
+	})
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'")
+		host := r.Host
+		if h, _, err := net.SplitHostPort(host); err == nil {
+			host = h
+		}
+		public := s.publicRequest(r)
+		if !hasHost(host) && !public {
+			fail(w, 403, errors.New("仅允许本机主机名"))
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			w.Header().Set("Cache-Control", "no-store")
+			if origin := r.Header.Get("Origin"); origin != "" {
+				u, err := url.Parse(origin)
+				scheme := "http"
+				if public {
+					scheme = "https"
+				}
+				if err != nil || u.Host != r.Host || u.Scheme != scheme || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" {
+					fail(w, 403, errors.New("请求来源不匹配"))
+					return
+				}
+			}
+			if (clientBootstrap(r) || (r.Header.Get("Authorization") != "" && hookAllowed(r))) && s.Engine.ClientIPBlocked(s.clientIP(r)) {
+				fail(w, 403, errors.New("此来源已被禁止接入"))
+				return
+			}
+			if r.URL.Path != "/api/v1/login" && !(r.Method == "POST" && r.URL.Path == "/api/v1/cli/session") && !oidcPreAuth(r) && !clientBootstrap(r) {
+				auth := r.Header.Get("Authorization")
+				if auth != "" {
+					if !strings.HasPrefix(auth, "Bearer ") || !hookAllowed(r) {
+						fail(w, 403, errors.New("Hook 凭据无权访问此接口"))
+						return
+					}
+					token := strings.TrimPrefix(auth, "Bearer ")
+					if !eq(token, s.HookToken) || public {
+						node, ok := s.Engine.AuthenticateClient(token)
+						if !ok {
+							fail(w, 403, errors.New("设备凭据无效或已撤销"))
+							return
+						}
+						r = r.WithContext(context.WithValue(r.Context(), clientContextKey{}, node))
+					}
+				} else {
+					var ok bool
+					r, ok = s.authorizeSession(w, r, mux)
+					if !ok {
+						return
+					}
+				}
+			}
+		}
+		mux.ServeHTTP(w, r)
+	})
+}
+func hasHost(h string) bool { return localaddr.IsLoopback(h) }
+
+type clientContextKey struct{}
+
+func requestClient(r *http.Request) (core.ClientNode, bool) {
+	node, ok := r.Context().Value(clientContextKey{}).(core.ClientNode)
+	return node, ok
+}
+func (s *Server) ownsInstance(w http.ResponseWriter, r *http.Request, id string) bool {
+	if r.Header.Get("Authorization") == "" {
+		return true
+	}
+	node, _ := requestClient(r)
+	if !s.Engine.ClientOwnsInstance(node.ID, id) {
+		fail(w, 403, errors.New("无权操作此设备的会话或审查"))
+		return false
+	}
+	return true
+}
+
+// The reverse proxy must preserve Host. Never trust arbitrary forwarded headers.
+func (s *Server) publicRequest(r *http.Request) bool {
+	u, err := url.Parse(s.PublicURL)
+	return err == nil && u.Scheme == "https" && u.Host != "" && u.Host == r.Host
+}
+func hookAllowed(r *http.Request) bool {
+	p := r.URL.Path
+	return (r.Method == "POST" && (p == "/api/v1/instances" || p == "/api/v1/reviews" || strings.HasPrefix(p, "/api/v1/instances/") || strings.HasPrefix(p, "/api/v1/reviews/"))) || (r.Method == "GET" && (p == "/api/v1/client/bundle" || strings.HasPrefix(p, "/api/v1/client/keys/") || strings.HasPrefix(p, "/api/v1/reviews/")))
+}
+
+// Plan D2/#16 L4: raw content requires a human auditor or admin. The existing
+// test seam may further restrict capability, never grant it to a lower role.
+func (s *Server) contentAllowed(r *http.Request) bool {
+	v := requestSession(r)
+	allowed := v.Kind == "human" && (v.Role == core.RoleAdmin || v.Role == core.RoleAuditor)
+	if s.contentAllowedOverride != nil {
+		return allowed && s.contentAllowedOverride(r)
+	}
+	return allowed
+}
+
+func hasReviewPageQuery(q url.Values) bool {
+	if q.Has("sessionKey") {
+		return true
+	}
+	for _, key := range []string{"page", "size", "q", "decision", "execution", "reviewPath", "sessionId", "sessionKey", "from", "to"} {
+		if q.Get(key) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func reviewPageParams(q url.Values) (int, int, core.ReviewFilter, error) {
+	page, size := 1, 20
+	if q.Has("sessionId") && q.Has("sessionKey") {
+		return 0, 0, core.ReviewFilter{}, errors.New("sessionId and sessionKey are mutually exclusive")
+	}
+	var err error
+	if value := q.Get("page"); value != "" {
+		page, err = strconv.Atoi(value)
+		if err != nil || page < 1 {
+			return 0, 0, core.ReviewFilter{}, errors.New("page 必须是正整数")
+		}
+	}
+	if value := q.Get("size"); value != "" {
+		size, err = strconv.Atoi(value)
+		if err != nil || size < 1 || size > 100 {
+			return 0, 0, core.ReviewFilter{}, errors.New("size 必须是 1 到 100")
+		}
+	}
+	filter := core.ReviewFilter{Query: strings.TrimSpace(q.Get("q")), Decision: q.Get("decision"), Execution: q.Get("execution"), ReviewPath: q.Get("reviewPath"), SessionID: q.Get("sessionId"), SessionKey: q.Get("sessionKey"), From: q.Get("from"), To: q.Get("to")}
+	if len([]rune(filter.Query)) > 200 {
+		return 0, 0, core.ReviewFilter{}, errors.New("q 不能超过 200 个字符")
+	}
+	if !validReviewChoice(filter.Decision, "", "pending", "approve", "reject") {
+		return 0, 0, core.ReviewFilter{}, errors.New("decision 无效")
+	}
+	if !validReviewChoice(filter.Execution, "", "not_executed", "awaiting_execution", "succeeded", "failed", "unknown") {
+		return 0, 0, core.ReviewFilter{}, errors.New("execution 无效")
+	}
+	if !validReviewChoice(filter.ReviewPath, "", "scope", "rule", "human", "model") {
+		return 0, 0, core.ReviewFilter{}, errors.New("reviewPath 无效")
+	}
+	for name, value := range map[string]string{"from": filter.From, "to": filter.To} {
+		if value == "" {
+			continue
+		}
+		if _, err := time.Parse("2006-01-02", value); err != nil {
+			return 0, 0, core.ReviewFilter{}, fmt.Errorf("%s 必须是 YYYY-MM-DD 日期", name)
+		}
+	}
+	if filter.From != "" && filter.To != "" && filter.From > filter.To {
+		return 0, 0, core.ReviewFilter{}, errors.New("from 不能晚于 to")
+	}
+	return page, size, filter, nil
+}
+
+func validReviewChoice(value string, choices ...string) bool {
+	for _, choice := range choices {
+		if value == choice {
+			return true
+		}
+	}
+	return false
+}
+
+func hookView(r core.Review) map[string]any {
+	return map[string]any{"id": r.ID, "decision": r.Decision, "comment": r.Comment, "ruleId": r.RuleID, "reviewPath": r.ReviewPath, "deadline": r.Deadline, "execution": r.Execution}
+}
+func (s *Server) events(w http.ResponseWriter, r *http.Request) {
+	f, ok := w.(http.Flusher)
+	if !ok {
+		fail(w, 500, errors.New("不支持事件流"))
+		return
+	}
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("X-Accel-Buffering", "no")
+	ch := make(chan struct{}, 1)
+	s.mu.Lock()
+	s.subscribers[ch] = struct{}{}
+	s.mu.Unlock()
+	defer func() { s.mu.Lock(); delete(s.subscribers, ch); s.mu.Unlock() }()
+	fmt.Fprint(w, "event: update\ndata: {}\n\n")
+	f.Flush()
+	t := time.NewTicker(10 * time.Second)
+	defer t.Stop()
+	for {
+		select {
+		case <-r.Context().Done():
+			return
+		case <-ch:
+			fmt.Fprint(w, "event: update\ndata: {}\n\n")
+			f.Flush()
+		case <-t.C:
+			fmt.Fprint(w, "event: update\ndata: {}\n\n")
+			f.Flush()
+		}
+	}
+}

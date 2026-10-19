@@ -1,0 +1,163 @@
+package server
+
+import (
+	"aegishook/internal/core"
+	"aegishook/internal/teststore"
+	"encoding/json"
+	"io/fs"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"testing/fstest"
+)
+
+func TestRuleFirstHookResponse(t *testing.T) {
+	e, err := core.Open(teststore.Dir(t, t.TempDir()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	if err := e.Register(core.Instance{ID: "fixture", Agent: "claude", SessionID: "fixture", Cwd: t.TempDir(), HookVersion: core.Version}); err != nil {
+		t.Fatal(err)
+	}
+	h := New(e, fstest.MapFS{}, "fixture-admin", "fixture-hook", t.TempDir()).Handler()
+	for _, tc := range []struct{ tool, args, decision, path string }{
+		{"Read", `{"file_path":"README.md"}`, "approve", "rule"},
+		{"Bash", `{"command":"redis-cli FLUSHALL"}`, "reject", "rule"},
+		{"Bash", `{"command":"echo fixture"}`, "pending", "human"},
+	} {
+		body := `{"instanceId":"fixture","callId":"` + core.ID() + `","toolName":"` + tc.tool + `","argumentsObj":` + tc.args + `}`
+		req := httptest.NewRequest("POST", "http://127.0.0.1:18790/api/v1/reviews", strings.NewReader(body))
+		req.Header.Set("Authorization", "Bearer fixture-hook")
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		var got map[string]any
+		if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil || w.Code != 200 || got["reviewPath"] != tc.path || got["decision"] != tc.decision {
+			t.Fatalf("status=%d path=%v decision=%v err=%v", w.Code, got["reviewPath"], got["decision"], err)
+		}
+		r, err := e.Review(got["id"].(string))
+		if err != nil || r.ReviewPath != tc.path || r.Decision != tc.decision {
+			t.Fatal("hook response differs from stored console record", err)
+		}
+		if _, exposed := got["rules"]; exposed {
+			t.Fatal("hook response must not expose rule snapshots")
+		}
+	}
+}
+
+func TestCallsPageSearchAndValidation(t *testing.T) {
+	e, err := core.Open(teststore.Dir(t, t.TempDir()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	if err := e.Register(core.Instance{ID: "fixture", Agent: "claude", SessionID: "fixture", Cwd: t.TempDir(), HookVersion: core.Version}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.Submit(core.ReviewInput{InstanceID: "fixture", CallID: "page", ToolName: "Bash", Arguments: map[string]any{"command": "echo page-search"}}); err != nil {
+		t.Fatal(err)
+	}
+	h := New(e, fstest.MapFS{}, "fixture-admin", "fixture-hook", t.TempDir()).Handler()
+	login := httptest.NewRequest("POST", "http://127.0.0.1:18790/api/v1/login", strings.NewReader(`{"token":"fixture-admin"}`))
+	loginW := httptest.NewRecorder()
+	h.ServeHTTP(loginW, login)
+	if loginW.Code != 200 {
+		t.Fatal(loginW.Body.String())
+	}
+	pageReq := httptest.NewRequest("GET", "http://127.0.0.1:18790/api/v1/calls?page=1&size=1&q=page-search", nil)
+	pageReq.AddCookie(loginW.Result().Cookies()[0])
+	pageW := httptest.NewRecorder()
+	h.ServeHTTP(pageW, pageReq)
+	var page map[string]any
+	if err := json.Unmarshal(pageW.Body.Bytes(), &page); err != nil || pageW.Code != 200 || page["total"] != float64(1) {
+		t.Fatalf("page status=%d body=%s err=%v", pageW.Code, pageW.Body.String(), err)
+	}
+	bad := httptest.NewRequest("GET", "http://127.0.0.1:18790/api/v1/calls?size=101", nil)
+	bad.AddCookie(loginW.Result().Cookies()[0])
+	badW := httptest.NewRecorder()
+	h.ServeHTTP(badW, bad)
+	if badW.Code != 400 {
+		t.Fatalf("invalid size accepted: %d", badW.Code)
+	}
+}
+
+func TestAuthBoundaries(t *testing.T) {
+	e, err := core.Open(teststore.Dir(t, t.TempDir()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	var ui fs.FS = fstest.MapFS{"index.html": &fstest.MapFile{Data: []byte("app")}}
+	s := New(e, ui, "admin-secret", "hook-secret", t.TempDir())
+	handler := s.Handler()
+	cases := []struct {
+		method, path, auth, origin, host string
+		status                           int
+	}{{"POST", "/api/v1/rules", "Bearer hook-secret", "", "127.0.0.1:18790", 403}, {"GET", "/api/v1/settings", "", "", "127.0.0.1:18790", 401}, {"GET", "/api/v1/settings", "Bearer hook-secret", "", "127.0.0.1:18790", 403}, {"DELETE", "/api/v1/installations/x", "Bearer hook-secret", "", "127.0.0.1:18790", 403}, {"GET", "/", "", "", "evil.example", 403}, {"POST", "/api/v1/login", "", "http://evil.example", "127.0.0.1:18790", 403}}
+	for _, c := range cases {
+		r := httptest.NewRequest(c.method, "http://"+c.host+c.path, strings.NewReader(`{}`))
+		r.Header.Set("Authorization", c.auth)
+		r.Header.Set("Origin", c.origin)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		if w.Code != c.status {
+			t.Fatalf("%s %s got %d", c.method, c.path, w.Code)
+		}
+	}
+	r := httptest.NewRequest("POST", "http://127.0.0.1:18790/api/v1/login", strings.NewReader(`{"token":"admin-secret"}`))
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, r)
+	if w.Code != http.StatusOK || len(w.Result().Cookies()) != 1 {
+		t.Fatal(w.Body.String())
+	}
+	cookie := w.Result().Cookies()[0]
+	if !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode {
+		t.Fatal("weak session cookie")
+	}
+	r = httptest.NewRequest("GET", "http://127.0.0.1:18790/api/v1/settings", nil)
+	r.AddCookie(cookie)
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, r)
+	if w.Code != 200 || strings.Contains(w.Body.String(), "admin-secret") {
+		t.Fatal(w.Body.String())
+	}
+}
+
+func TestSPADeepLinkNoRedirect(t *testing.T) {
+	e, err := core.Open(teststore.Dir(t, t.TempDir()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	ui := fstest.MapFS{"index.html": &fstest.MapFile{Data: []byte("app")}}
+	h := New(e, ui, "a", "h", t.TempDir()).Handler()
+	for _, path := range []string{"/", "/settings", "/approvals"} {
+		r := httptest.NewRequest("GET", "http://127.0.0.1:18790"+path, nil)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != 200 || w.Body.String() != "app" {
+			t.Fatalf("deep link %s: %d %s", path, w.Code, w.Body.String())
+		}
+	}
+}
+
+func TestCustomLoopbackHosts(t *testing.T) {
+	e, err := core.Open(teststore.Dir(t, t.TempDir()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer e.Close()
+	h := New(e, fstest.MapFS{"index.html": &fstest.MapFile{Data: []byte("app")}}, "a", "h", t.TempDir()).Handler()
+	for _, host := range []string{"localhost:18800", "127.0.0.2:18800", "[::1]:18800", "[::ffff:127.0.0.2]:18800"} {
+		t.Run(host, func(t *testing.T) {
+			r := httptest.NewRequest("POST", "http://"+host+"/api/v1/login", strings.NewReader(`{"token":"a"}`))
+			r.Header.Set("Origin", "http://"+host)
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, r)
+			if w.Code != http.StatusOK {
+				t.Fatalf("login got %d: %s", w.Code, w.Body.String())
+			}
+		})
+	}
+}
