@@ -13,7 +13,7 @@ require (
 	golang.org/x/sys v0.48.0
 	modernc.org/sqlite v1.34.5
 	// Pin stack-overflow fix https://github.com/mvdan/sh/commit/0e0eb36bb6dd6a143842ffda25738e9a82dc915e; move to the first tagged release containing it.
-	mvdan.cc/sh/v3 v3.14.1-0.20260928185915-0e0eb36bb6dd
+	mvdan.cc/sh/v3 v3.14.1
 )
 
 require golang.org/x/text v0.29.0
