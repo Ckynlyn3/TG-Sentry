@@ -10,7 +10,7 @@ require (
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/pressly/goose/v3 v3.24.1
 	golang.org/x/oauth2 v0.37.0
-	golang.org/x/sys v0.48.0
+	golang.org/x/sys v0.49.0
 	modernc.org/sqlite v1.34.5
 	// Pin stack-overflow fix https://github.com/mvdan/sh/commit/0e0eb36bb6dd6a143842ffda25738e9a82dc915e; move to the first tagged release containing it.
 	mvdan.cc/sh/v3 v3.14.1-0.20260928185915-0e0eb36bb6dd
