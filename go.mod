@@ -7,7 +7,7 @@ ignore ./console/node_modules
 
 require (
 	github.com/coreos/go-oidc/v3 v3.21.0
-	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jackc/pgx/v5 v5.11.0
 	github.com/pressly/goose/v3 v3.24.1
 	golang.org/x/oauth2 v0.37.0
 	golang.org/x/sys v0.48.0
