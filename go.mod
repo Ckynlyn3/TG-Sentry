@@ -16,7 +16,7 @@ require (
 	mvdan.cc/sh/v3 v3.14.1-0.20260928185915-0e0eb36bb6dd
 )
 
-require golang.org/x/text v0.29.0
+require golang.org/x/text v0.43.0
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -31,7 +31,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
 	modernc.org/libc v1.55.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
