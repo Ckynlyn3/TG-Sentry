@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Structural schema; runtime semantic, freeze, digests and admissibility gates in internal/eval/config.go also apply.",
+  "properties": {
+    "sets": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "admissibility_reason": {
+            "type": "string"
+          },
+          "admissible": {
+            "type": "boolean"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "count_notes": {
+            "type": "string"
+          },
+          "exposure_count": {
+            "type": "integer"
+          },
+          "fetch": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "url_or_path": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url_or_path"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "field_map": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "category": {
+                    "type": "string"
+                  },
+                  "format": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "boolean"
+                  },
+                  "language": {
+                    "type": "string"
+                  },
+                  "surface": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "format",
+                  "text",
+                  "label",
+                  "category",
+                  "surface"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "files": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "item_count_declared": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "language_metadata_level": {
+            "type": "string"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "license_code": {
+            "type": "string"
+          },
+          "license_data": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "split_use": {
+            "type": "string"
+          },
+          "synthetic": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "dev_seed": {
+                    "type": "string"
+                  },
+                  "generator": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "generator",
+                  "dev_seed"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "source_url",
+          "revision",
+          "license_code",
+          "license_data",
+          "admissible",
+          "admissibility_reason",
+          "languages",
+          "language_metadata_level",
+          "category",
+          "categories",
+          "mode",
+          "split_use",
+          "item_count_declared",
+          "count_notes",
+          "exposure_count",
+          "synthetic",
+          "fetch",
+          "files",
+          "field_map"
+        ],
+        "type": "object"
+      },
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "version": {
+      "const": 1
+    }
+  },
+  "required": [
+    "version",
+    "sets"
+  ],
+  "title": "TG-Sentry eval manifest",
+  "type": "object"
+}

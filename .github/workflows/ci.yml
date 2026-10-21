@@ -1,0 +1,211 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+permissions:
+  contents: read
+jobs:
+  windows-client:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+      - run: npm --prefix console ci --no-audit --no-fund
+      - run: npm --prefix console run build
+      - run: node scripts/prepare-assets.mjs
+      - run: go test ./internal/core -run '^TestClient' -count=1
+      - run: go test ./internal/server ./internal/localaddr ./cmd/aegishook
+      - run: go build -o bin/aegishook.exe ./cmd/aegishook
+      - run: go build -o bin/test-oidc.exe ./cmd/test-oidc
+      - name: Native Windows installer lifecycle
+        shell: powershell
+        run: ./scripts/test-hook-windows.ps1 -Binary ./bin/aegishook.exe
+      # S4 Gate A only: no msiexec, provisioning, signing or machine lifecycle here.
+      # https://docs.firegiant.com/wix/using-wix/#command-line-net-tool
+      - name: Build and inspect unsigned Windows MSI (WiX 5.0.2)
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned WiX installation failed' }
+          # CI fixture version, following release.yml's v0.1.0 example; not a release.
+          ./packaging/windows/build-msi.ps1 -Binary ./bin/aegishook.exe -Version 0.1.0 -Output ./bin/TG-Sentry-Endpoint-x64-unsigned.msi
+          ./packaging/windows/test-msi.ps1 ./bin/TG-Sentry-Endpoint-x64-unsigned.msi -Inspect
+      - name: Upload unsigned Windows MSI
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tg-sentry-endpoint-windows-x64-unsigned
+          path: bin/TG-Sentry-Endpoint-x64-unsigned.msi
+          if-no-files-found: error
+  kafka-delivery:
+    name: Kafka TLS/SASL delivery acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 20 # Existing CI job budget.
+    services:
+      postgres:
+        image: postgres:16.3-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: dev-only
+          POSTGRES_DB: tg_sentry_test
+        options: --health-cmd "pg_isready -h 127.0.0.1 -U test -d tg_sentry_test"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: go.mod
+      - name: Prepare dependencies outside the service test container
+        run: |
+          go mod download
+          go list -mod=readonly -deps -test -tags kafka_integration ./internal/core >/dev/null
+          docker pull golang:1.27.2
+      # Runner-host Docker, no DinD or published ports. Join the service network:
+      # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#job-context (job.services.<service_id>.network)
+      - name: Start pinned Apache Kafka with throwaway mTLS and PLAIN-over-TLS
+        run: bash scripts/test-kafka-start.sh "$RUNNER_TEMP/kafka" tg-sentry-kafka "${{ job.services.postgres.network }}"
+      - name: Produce and consume OCSF-in-CloudEvents through the PostgreSQL engine
+        run: |
+          docker run --rm --pull=never --network "${{ job.services.postgres.network }}" \
+            -v "$GITHUB_WORKSPACE:/src" -w /src \
+            -v "$(go env GOMODCACHE):/gomod" -v "$(go env GOCACHE):/gocache" \
+            -v "$RUNNER_TEMP/kafka:/fixture:ro" \
+            -e GOMODCACHE=/gomod -e GOCACHE=/gocache -e GOMAXPROCS=4 \
+            -e TG_SENTRY_TEST_DATABASE_URL='postgres://test:dev-only@postgres/tg_sentry_test?sslmode=disable' \
+            -e TG_SENTRY_KAFKA_BROKERS=kafka:9092 \
+            -e TG_SENTRY_KAFKA_RISK_TOPIC=tg-sentry-risk-test -e TG_SENTRY_KAFKA_AUDIT_TOPIC=tg-sentry-audit-test \
+            -e TG_SENTRY_KAFKA_CA_FILE=/fixture/ca.pem -e TG_SENTRY_KAFKA_CERT_FILE=/fixture/client.pem \
+            -e TG_SENTRY_KAFKA_KEY_FILE=/fixture/client-key.pem -e TG_SENTRY_KAFKA_SASL_MECHANISM=PLAIN \
+            -e TG_SENTRY_KAFKA_SASL_USERNAME=test -e TG_SENTRY_KAFKA_SASL_PASSWORD_FILE=/fixture/password \
+            golang:1.27.2 go test -race -count=1 -tags kafka_integration ./internal/core -run '^TestKafkaBrokerAcceptance$' -v
+      - name: Broker diagnostics
+        if: failure()
+        run: docker logs tg-sentry-kafka
+      - name: Remove throwaway Kafka and certificates
+        if: always()
+        run: |
+          docker rm -f tg-sentry-kafka || true
+          rm -rf -- "$RUNNER_TEMP/kafka"
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # ubuntu-24.04-arm: free standard arm64 runner for public repos (GA 2025-08-07,
+        # https://github.blog/changelog/2025-08-07-arm64-hosted-runners-for-public-repositories-are-now-generally-available/).
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - name: Configure temporary directories
+        run: |
+          echo "TMPDIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          echo "AEGIS_SCREENSHOTS=$RUNNER_TEMP/aegishook-qa" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          # Pin matches GitLab test:linux/test:postgres:linux (golang:1.27.2); go-version-file would select go.mod's older 1.26.0. See https://github.com/actions/setup-go#usage
+          go-version: '1.27.2'
+          cache: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            console/package-lock.json
+            adapter/package-lock.json
+      - run: npm run build
+      # Mirrors .gitlab-ci.yml `.console-build`: `npm --prefix console run lint` (eslint)
+      # and `npm --prefix console test` (vitest run). Runs after `npm run build` because
+      # scripts/build.sh performs the console `npm ci` install.
+      - name: Console lint and unit tests
+        if: runner.os == 'Linux'
+        run: |
+          npm --prefix console run lint
+          npm --prefix console test
+      # Mirrors .gitlab-ci.yml `test:linux` (`go mod verify`, `go vet ./...`).
+      - name: Verify modules and vet
+        if: runner.os == 'Linux'
+        run: |
+          go mod verify
+          go vet ./...
+      - run: go build -o bin/test-oidc ./cmd/test-oidc
+      - run: go test -race ./...
+      - run: npm --prefix adapter ci --no-audit --no-fund
+      - run: npm run adapter:check
+      - run: node --test scripts/test-oidc.test.mjs
+      - run: npm run test:adapter
+      - run: npm run test:opencode
+      - name: Install Chromium
+        if: runner.os == 'Linux'
+        run: npm --prefix console exec -- playwright install --with-deps chromium
+      - name: Browser end-to-end tests
+        if: runner.os == 'Linux'
+        run: npm run test:e2e
+      - name: Upload browser diagnostics
+        if: failure() && runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: browser-diagnostics
+          path: |
+            console/test-results
+            ${{ runner.temp }}/aegishook-qa
+          if-no-files-found: ignore
+          retention-days: 7
+  # Mirrors .gitlab-ci.yml `test:postgres:linux`: same postgres:16.3-alpine service image,
+  # the same disposable placeholders and the TG_SENTRY_TEST_DATABASE_URL variable read by
+  # internal/teststore/store.go:24-38, and the same `-p 1` package run set.
+  # https://docs.github.com/en/actions/use-cases-and-examples/using-containerized-services/creating-postgresql-service-containers
+  postgres:
+    name: PostgreSQL store tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16.3-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: dev-only
+          POSTGRES_DB: tg_sentry_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # Disposable CI database placeholders only; never deployment credentials.
+      TG_SENTRY_TEST_DATABASE_URL: postgres://test:dev-only@localhost:5432/tg_sentry_test?sslmode=disable
+      GOMAXPROCS: '4'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          # Pin matches GitLab test:linux/test:postgres:linux (golang:1.27.2); go-version-file would select go.mod's older 1.26.0. See https://github.com/actions/setup-go#usage
+          go-version: '1.27.2'
+          cache: true
+      - run: go vet -p 1 ./...
+      - run: go test -p 1 -race -cover ./...

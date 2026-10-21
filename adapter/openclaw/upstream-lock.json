@@ -1,0 +1,38 @@
+{
+  "openclaw": {
+    "version": "2026.10.4",
+    "tarball": "https://registry.npmjs.org/openclaw/-/openclaw-2026.10.4.tgz",
+    "integrity": "sha512-+FH0StZF1tlTazM7JJGY6JePeJmhFNSRByi2Q3jXPRiLO7o4dJh2xa9Vy4Dk8Cd2ic8B7Zkf5NfEaCCWUkgqnQ=="
+  },
+  "nodeImageId": "sha256:14078204b6bb268c107ceff6d3c43f45a888105e5c2b18b14c32b3409d93a1b0",
+  "precedents": [
+    {
+      "repository": "https://github.com/kenryu42/cc-safety-net",
+      "commit": "9ef6d15eeb32ee9aec43d667631a6e9a0aad7da2",
+      "path": "src/hosts/openclaw/plugin.ts",
+      "sha256": "79852fdc4323d21960590aef056f9dec41f349e9e01add291be15fcc59133d0b"
+    },
+    {
+      "repository": "https://github.com/kenryu42/cc-safety-net",
+      "commit": "9ef6d15eeb32ee9aec43d667631a6e9a0aad7da2",
+      "path": "tests/e2e-live/openclaw-host.ts",
+      "sha256": "1028621612864da354d6865410a6d92ce6eb3bf23ac332017100173dd9e042c6"
+    }
+  ],
+  "contracts": [
+    "https://docs.openclaw.ai/plugins/hooks/reference#registration-and-execution",
+    "https://docs.openclaw.ai/plugins/hooks/tool-policy",
+    "https://docs.openclaw.ai/concepts/model-providers/custom-providers#local-proxies-lm-studio-vllm-litellm-etc",
+    "https://docs.openclaw.ai/cli/agent"
+  ],
+  "budgetSources": {
+    "hookTimeoutMs": "OpenClaw hook reference: before_tool_call defaults to 15000 ms; hooks.timeouts.before_tool_call overrides hooks.timeoutMs overrides api.on timeoutMs",
+    "decisionDeadlineMs": "adapter/index.ts: existing HTTP deadline 5000 ms, here applied to the complete decision lifecycle",
+    "pollMs": "internal/bridge/bridge.go: 500 ms pending-review poll",
+    "responseBytes": "internal/bridge/bridge.go: 2 MiB JSON limit",
+    "gatewayReadinessMs": "cc-safety-net tests/e2e-live/hermes-openclaw.live.test.ts: 180000 ms",
+    "gatewayReadinessPollMs": "cc-safety-net tests/e2e-live/openclaw-host.ts: 250 ms",
+    "agentTurnMs": "cc-safety-net tests/e2e-live/hermes-openclaw.live.test.ts: 120000 ms",
+    "cliTimeoutMs": "cc-safety-net tests/e2e-live/hermes-openclaw.live.test.ts: 60000 ms"
+  }
+}

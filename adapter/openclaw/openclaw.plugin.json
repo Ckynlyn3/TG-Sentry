@@ -1,0 +1,17 @@
+{
+  "id": "tg-sentry",
+  "name": "TG-Sentry",
+  "description": "Fail-closed TG-Sentry tool-call review through the AegisHook HTTP decision API.",
+  "activation": { "onStartup": true },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["endpoint", "token"],
+    "properties": {
+      "endpoint": { "type": "string", "minLength": 1 },
+      "token": { "type": "string", "minLength": 1 },
+      "nodeId": { "type": "string", "pattern": "^[a-f0-9]{32}$" }
+    }
+  },
+  "uiHints": { "token": { "label": "Decision-service hook token", "sensitive": true } }
+}

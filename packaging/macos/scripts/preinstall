@@ -1,0 +1,40 @@
+#!/bin/bash
+set -eu
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+export PATH
+root='/Library/Application Support/TG-Sentry'
+plist=/Library/LaunchDaemons/com.tg-sentry.endpoint.plist
+label=system/com.tg-sentry.endpoint
+fail() { printf '%s\n' "$1" >&2; exit 1; }
+[ "$(id -u)" -eq 0 ] || fail 'installation requires root'
+[ "${3:-}" = / ] || fail 'only the running system volume is supported'
+# CERT FIO15-C, matching core.validateMachineTree: refuse unsafe paths, never
+# chown/chmod an existing provisioning destination into apparent safety.
+for dir in / /Library '/Library/Application Support' "$root" "$root/private" /Library/LaunchDaemons; do
+    [ ! -L "$dir" ] || fail 'symlink installation directory refused'
+    [ -e "$dir" ] || continue
+    [ -d "$dir" ] && [ "$(stat -f %u "$dir")" -eq 0 ] || fail 'untrusted installation directory'
+    mode=$(stat -f %Lp "$dir")
+    [ "$((8#$mode & 0022))" -eq 0 ] || fail 'writable installation directory refused'
+done
+for file in "$root/aegishook" "$root/uninstall.sh" "$plist"; do
+    [ ! -L "$file" ] || fail 'symlink payload destination refused'
+    [ -e "$file" ] || continue
+    [ -f "$file" ] && [ "$(stat -f %u "$file")" -eq 0 ] || fail 'untrusted payload destination'
+    mode=$(stat -f %Lp "$file")
+    [ "$((8#$mode & 0022))" -eq 0 ] || fail 'writable payload destination refused'
+done
+# Pending rollback/ is never GC. Require explicit administrator resolution BEFORE
+# replacing the binary. Only core may dispose terminal snapshots under its lock.
+if [ -e "$root/private/rollback" ] || [ -L "$root/private/rollback" ]; then
+    [ ! -L "$root/private/rollback" ] && [ -d "$root/private/rollback" ] || fail 'unsafe rollback directory'
+    if [ ! -f "$root/private/rollback/.committed" ] && [ ! -f "$root/private/rollback/.rolled-back" ]; then
+        fail 'pending transaction: explicit ctl commit or rollback required'
+    fi
+fi
+# Apple launchctl(1), bootstrap/bootout and print: absent is idempotent, but a
+# failed bootout of a loaded service MUST stop Installer before payload replacement.
+# https://keith.github.io/xcode-man-pages/launchctl.1.html
+if /bin/launchctl print "$label" >/dev/null 2>&1; then
+    /bin/launchctl bootout "$label"
+fi

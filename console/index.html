@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TG-Sentry 控制台</title>
+    <link rel="preload" href="/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- /login first paint uses all three weights (h1/brand 600, buttons 500, body 400): preload them
+         together (web.dev/articles/preload-critical-assets) so layout never waits on a late font fetch. -->
+    <link rel="preload" href="/fonts/ibm-plex-sans-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ibm-plex-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script src="/theme-init.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Static first paint (#92): this splash is build-time HTML, so FCP doesn't wait for the JS
+           bundle (web.dev/articles/rendering-on-the-web: static rendering). createRoot().render()
+           replaces it once React boots (react.dev/reference/react-dom/client/createRoot). -->
+      <div class="boot-splash" role="status">
+        <p class="brand-mark">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></svg>
+          <span>TG-Sentry</span>
+        </p>
+        <span class="sr-only">正在加载…</span>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

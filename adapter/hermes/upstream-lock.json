@@ -1,0 +1,50 @@
+{
+  "hermes": {
+    "version": "v0.22.2",
+    "commit": "d923a5eb487a17c0a68801bba9ef0f56c81040a8",
+    "repository": "https://github.com/NousResearch/hermes-agent",
+    "license": "MIT",
+    "requiresPython": ">=3.11,<3.15",
+    "install": "test \"$(git rev-parse HEAD)\" = d923a5eb487a17c0a68801bba9ef0f56c81040a8 && bash ./setup-hermes.sh --runtime-only"
+  },
+  "references": [
+    {
+      "repository": "https://github.com/NousResearch/hermes-agent",
+      "commit": "d923a5eb487a17c0a68801bba9ef0f56c81040a8",
+      "path": "hermes_cli/plugins.py",
+      "sha256": "f5a1c27a22025984bbf956b58154ce23914592307bd945d7a1c0167cc443d771",
+      "note": "VALID_HOOKS (:109), pre_tool_call dispatch and block/approve precedence (:1970-2030), hook_callback_timeout fail-closed (:1866-1870)"
+    },
+    {
+      "repository": "https://github.com/NousResearch/hermes-agent",
+      "commit": "d923a5eb487a17c0a68801bba9ef0f56c81040a8",
+      "path": "tools/file_tools.py",
+      "note": "read_file/write_file/patch parameter names: path (:1152-1230)"
+    },
+    {
+      "repository": "https://github.com/NousResearch/hermes-agent",
+      "commit": "d923a5eb487a17c0a68801bba9ef0f56c81040a8",
+      "path": "tools/terminal_tool.py",
+      "note": "terminal parameters: command, workdir (:1497-1520)"
+    },
+    {
+      "repository": "https://github.com/akto-api-security/akto",
+      "commit": "9ecaebfb6d44eb6c8e6e54a04d9d2c62e29c7ccf",
+      "path": "apps/mcp-endpoint-shield/hermes/__init__.py",
+      "sha256": "26eaca6738fe901c104e652fd2aba13c573c568e15ce70b02afee253e3912225",
+      "note": "Mapping precedent only (hook names and kwarg names); its fail-open error policy is deliberately not ported. No code copied."
+    }
+  ],
+  "contracts": [
+    "https://hermes-agent.nousresearch.com/docs/user-guide/features/plugins",
+    "https://github.com/NousResearch/hermes-agent/blob/v0.22.2/website/docs/reference/cli-commands.md",
+    "https://hermes-agent.nousresearch.com/docs/user-guide/features/hooks",
+    "https://hermes-agent.nousresearch.com/docs/integrations/providers"
+  ],
+  "budgetSources": {
+    "budgetMs": "adapter/index.ts and adapter/openclaw/index.ts: the 5000 ms decision deadline, here a single monotonic budget across every request, read and poll",
+    "pollMs": "internal/bridge/bridge.go:319,426: 500 ms pending-review poll",
+    "responseBytes": "internal/bridge/bridge.go:74,186: 2 MiB JSON response limit",
+    "hookTimeoutMs": "hermes_cli/plugins.py plugins.hook_callback_timeout default 30 s (upstream); the 5 s budget sits below it"
+  }
+}

@@ -1,0 +1,63 @@
+[
+  {
+    "name": "reported surfaces",
+    "input": {
+      "runId": "synthetic-run-not-an-attempt-id",
+      "systemPrompt": "Read-only workspace instructions.",
+      "tools": [
+        {"type": "function", "name": "query", "description": null, "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}},
+        {"type": "custom", "name": "catalog", "extension": {"labels": ["read-only"]}}
+      ],
+      "prompt": "excluded-user-message",
+      "historyMessages": [{"role": "user", "content": "excluded-history"}]
+    },
+    "observations": [
+      {
+        "id": "openclaw-instructions", "kind": "instructions", "coverage": "observed", "contentState": "captured",
+        "source": {"adapter": "openclaw", "adapterVersion": "2026.10.4", "hook": "llm_input.systemPrompt", "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"},
+        "sessionId": "synthetic-session", "instanceId": "synthetic-instance", "observedAt": "2026-10-21T01:02:03Z",
+        "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+        "instructions": {"attribute": "gen_ai.system_instructions", "parts": [{"type": "text", "content": "Read-only workspace instructions."}]}
+      },
+      {
+        "id": "openclaw-tools", "kind": "tool_definitions", "coverage": "observed", "contentState": "captured",
+        "source": {"adapter": "openclaw", "adapterVersion": "2026.10.4", "hook": "llm_input.tools", "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"},
+        "sessionId": "synthetic-session", "instanceId": "synthetic-instance", "observedAt": "2026-10-21T01:02:03Z",
+        "epochDigest": "ad19f1e4cba481d02b3bd6b9d4a779a3f3ac1f86c28ee649c5613580b33bfb7b",
+        "toolDefinitions": {"attribute": "gen_ai.tool.definitions", "items": [
+          {"type": "function", "name": "query", "description": null, "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}},
+          {"type": "custom", "name": "catalog", "extension": {"labels": ["read-only"]}}
+        ]}
+      }
+    ]
+  },
+  {
+    "name": "absent surfaces are not empty captures",
+    "input": {"runId": "synthetic-run", "prompt": "excluded-user-message", "historyMessages": []},
+    "observations": [
+      {
+        "id": "openclaw-absent-instructions", "kind": "instructions", "coverage": "observed", "contentState": "never_captured",
+        "source": {"adapter": "openclaw", "adapterVersion": "2026.10.4", "hook": "llm_input.systemPrompt", "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"},
+        "sessionId": "synthetic-session", "instanceId": "synthetic-instance", "observedAt": "2026-10-21T01:02:03Z"
+      },
+      {
+        "id": "openclaw-absent-tools", "kind": "tool_definitions", "coverage": "observed", "contentState": "never_captured",
+        "source": {"adapter": "openclaw", "adapterVersion": "2026.10.4", "hook": "llm_input.tools", "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"},
+        "sessionId": "synthetic-session", "instanceId": "synthetic-instance", "observedAt": "2026-10-21T01:02:03Z"
+      }
+    ]
+  },
+  {
+    "name": "explicit empty tool set",
+    "input": {"tools": []},
+    "observations": [
+      {
+        "id": "openclaw-empty-tools", "kind": "tool_definitions", "coverage": "observed", "contentState": "captured",
+        "source": {"adapter": "openclaw", "adapterVersion": "2026.10.4", "hook": "llm_input.tools", "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"},
+        "sessionId": "synthetic-session", "instanceId": "synthetic-instance", "observedAt": "2026-10-21T01:02:03Z",
+        "epochDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "toolDefinitions": {"attribute": "gen_ai.tool.definitions", "items": []}
+      }
+    ]
+  }
+]

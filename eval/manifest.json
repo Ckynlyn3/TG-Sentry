@@ -1,0 +1,366 @@
+{
+  "version": 1,
+  "sets": [
+    {
+      "name": "AgentDojo",
+      "source_url": "https://github.com/ethz-spylab/agentdojo",
+      "revision": "089ed468cf3ed0322acc66b0211f26d9d90dbf60",
+      "license_code": "MIT",
+      "license_data": "MIT",
+      "admissible": true,
+      "admissibility_reason": "Commercial eval permitted; paper Appendix E.4. Tool-output detection is not full-agent utility/ASR.",
+      "languages": [
+        "mixed/unknown"
+      ],
+      "language_metadata_level": "none",
+      "category": "category::prompt-attack",
+      "mode": "detector-level",
+      "split_use": "held_out",
+      "item_count_declared": 629,
+      "count_notes": "97 user tasks, 27 injection tasks, 629 security cases; tool-output unit counts measured at acquisition. Also maps high-risk-ops; tags 1,5,9,14.",
+      "exposure_count": 0,
+      "synthetic": null,
+      "fetch": [
+        {
+          "url_or_path": "https://github.com/ethz-spylab/agentdojo"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::prompt-attack",
+        "category::high-risk-ops"
+      ]
+    },
+    {
+      "name": "InjecAgent",
+      "source_url": "https://github.com/uiuc-kang-lab/InjecAgent",
+      "revision": "f19c9f2c79a41046eb13c03c51a24c567a8ffa07",
+      "license_code": "MIT",
+      "license_data": "unverified (repository MIT is the only grant)",
+      "admissible": true,
+      "admissibility_reason": "Admitted per approved plan, explicitly flag data grant; report-only T2b.",
+      "languages": [
+        "mixed/unknown"
+      ],
+      "language_metadata_level": "none",
+      "category": "category::prompt-attack",
+      "mode": "detector-level",
+      "split_use": "held_out",
+      "item_count_declared": 1054,
+      "count_notes": "Per setting: 17 user x 62 attacker (30 DH,32 DS); report DH/DS and base/enhanced separately. Also high-risk-ops DH, tags 1,5.",
+      "exposure_count": 0,
+      "synthetic": null,
+      "fetch": [
+        {
+          "url_or_path": "https://github.com/uiuc-kang-lab/InjecAgent"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::prompt-attack",
+        "category::high-risk-ops"
+      ]
+    },
+    {
+      "name": "R-Judge",
+      "source_url": "https://github.com/Lordog/R-Judge",
+      "revision": "83ce301da3ad50dd8b397e772863f5411c3d3dc2",
+      "license_code": "none found",
+      "license_data": "none found",
+      "admissible": false,
+      "admissibility_reason": "No LICENSE found; lead removed T9. Never acquire or score.",
+      "languages": [
+        "mixed/unknown"
+      ],
+      "language_metadata_level": "none",
+      "category": "category::high-risk-ops",
+      "mode": "judge",
+      "split_use": "held_out",
+      "item_count_declared": 569,
+      "count_notes": "300 unsafe / 269 safe.",
+      "exposure_count": 0,
+      "synthetic": null,
+      "fetch": [
+        {
+          "url_or_path": "https://github.com/Lordog/R-Judge"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::high-risk-ops"
+      ]
+    },
+    {
+      "name": "PINT",
+      "source_url": "https://github.com/lakeraai/pint-benchmark",
+      "revision": "0efab3f463eae9c823130d8faffb71b2e7c06e63",
+      "license_code": "MIT",
+      "license_data": "private; access by request, terms unverified",
+      "admissible": false,
+      "admissibility_reason": "External published-score reference only; no access/terms approved.",
+      "languages": [
+        "mixed/unknown"
+      ],
+      "language_metadata_level": "none",
+      "category": "category::prompt-attack",
+      "mode": "detector-level",
+      "split_use": "held_out",
+      "item_count_declared": 4314,
+      "count_notes": "3016 EN +1298 non-EN; no verified item-level language metadata.",
+      "exposure_count": 0,
+      "synthetic": null,
+      "fetch": [
+        {
+          "url_or_path": "https://github.com/lakeraai/pint-benchmark"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::prompt-attack"
+      ]
+    },
+    {
+      "name": "NotInject",
+      "source_url": "https://huggingface.co/datasets/leolee99/NotInject",
+      "revision": "847ae76cf8fea5ed325429e569ae8cfef022d2e0",
+      "license_code": "MIT",
+      "license_data": "MIT",
+      "admissible": true,
+      "admissibility_reason": "MIT dataset card; T1 whole-benchmark aggregate, all benign.",
+      "languages": [
+        "mixed/unknown"
+      ],
+      "language_metadata_level": "none",
+      "category": "category::prompt-attack",
+      "mode": "detector-level",
+      "split_use": "held_out",
+      "item_count_declared": 339,
+      "count_notes": "113 x3 difficulty tiers, NOT dev/test splits; PIGuard code 1b5751e88bf7475acbedfc8eda795ce060307c84. Language mixed/unknown, card/paper disagree.",
+      "exposure_count": 0,
+      "synthetic": null,
+      "fetch": [
+        {
+          "url_or_path": "https://huggingface.co/datasets/leolee99/NotInject"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::prompt-attack"
+      ]
+    },
+    {
+      "name": "MCPSecBench",
+      "source_url": "https://github.com/AIS2Lab/MCPSecBench",
+      "revision": "7612c5a3e811dcf01f64e4f2bb324591a2feaaf4",
+      "license_code": "MIT",
+      "license_data": "unverified",
+      "admissible": true,
+      "admissibility_reason": "Admitted per plan with data-grant flag; text-detectable categories only. Runtime categories deferred. Schema pending; field_map must be lead supplied.",
+      "languages": [
+        "mixed/unknown"
+      ],
+      "language_metadata_level": "none",
+      "category": "category::supply-chain",
+      "mode": "detector-level",
+      "split_use": "held_out",
+      "item_count_declared": null,
+      "count_notes": "17 MCP categories across client/protocol/server/host; case count unverified. Also high-risk-ops.",
+      "exposure_count": 0,
+      "synthetic": null,
+      "fetch": [
+        {
+          "url_or_path": "https://github.com/AIS2Lab/MCPSecBench"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::supply-chain",
+        "category::high-risk-ops"
+      ]
+    },
+    {
+      "name": "CPAD",
+      "source_url": "https://github.com/liuchengyuan123/CPAD",
+      "revision": "1b8a9b3e0da34bff316a63de2f20dee8261903e4",
+      "license_code": "CC-BY-4.0",
+      "license_data": "CC-BY-4.0",
+      "admissible": true,
+      "admissibility_reason": "Attribution required: Goal-Oriented Prompt Attack and Safety Evaluation for LLMs, CPAD authors. Positives only; T4 report-only; field_map pending.",
+      "languages": [
+        "ZH"
+      ],
+      "language_metadata_level": "set",
+      "category": "category::prompt-attack",
+      "mode": "detector-level",
+      "split_use": "held_out",
+      "item_count_declared": 10050,
+      "count_notes": "Whole set ZH; goal-hijack/jailbreak positives, tags 1,2,5,7,11.",
+      "exposure_count": 0,
+      "synthetic": null,
+      "fetch": [
+        {
+          "url_or_path": "https://github.com/liuchengyuan123/CPAD"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::prompt-attack"
+      ]
+    },
+    {
+      "name": "ZH-BENIGN-LOCAL",
+      "source_url": "owner-supplied:ZH-BENIGN-LOCAL",
+      "revision": "pending-owner-approval",
+      "license_code": "owner supplied",
+      "license_data": "pending-owner-permission",
+      "admissible": false,
+      "admissibility_reason": "Named local exception ZH-BENIGN-LOCAL; no TG-Java data imported. Owner approval and corpus provenance required.",
+      "languages": [
+        "ZH"
+      ],
+      "language_metadata_level": "set",
+      "category": "category::prompt-attack",
+      "mode": "detector-level",
+      "split_use": "held_out",
+      "item_count_declared": null,
+      "count_notes": "Previously exposed TG-Java diagnostic corpus ~330, if approved; actual exposure must be declared.",
+      "exposure_count": 0,
+      "synthetic": null,
+      "fetch": [
+        {
+          "url_or_path": "owner-supplied:ZH-BENIGN-LOCAL"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::prompt-attack"
+      ]
+    },
+    {
+      "name": "PII-dev",
+      "source_url": "internal/eval/testdata/pii-dev/records.json",
+      "revision": "generator-at-freeze",
+      "license_code": "MIT",
+      "license_data": "synthetic local fixtures",
+      "admissible": true,
+      "admissibility_reason": "Workers may use only dev seed; WARMUP-20 named local exception.",
+      "languages": [
+        "EN",
+        "ZH"
+      ],
+      "language_metadata_level": "item",
+      "category": "category::sensitive-info",
+      "mode": "detector-level",
+      "split_use": "dev",
+      "item_count_declared": 20,
+      "count_notes": "2 languages x2 surfaces x(4 entity types+benign). No real PII. Worker-authored/adaptive dev fixtures; repeated unit-test use, never claimed independent.",
+      "exposure_count": 1,
+      "synthetic": {
+        "generator": "internal/eval/pii.go",
+        "dev_seed": "dev"
+      },
+      "fetch": [
+        {
+          "url_or_path": "internal/eval/testdata/pii-dev/records.json"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::sensitive-info"
+      ]
+    },
+    {
+      "name": "PII-acceptance",
+      "source_url": "lead-generated:sealed-directory",
+      "revision": "generator-at-freeze",
+      "license_code": "MIT",
+      "license_data": "synthetic local acceptance",
+      "admissible": true,
+      "admissibility_reason": "Separate generation, lead-supplied sealed seed only after tag. Workers must not generate/read it.",
+      "languages": [
+        "EN",
+        "ZH"
+      ],
+      "language_metadata_level": "item",
+      "category": "category::sensitive-info",
+      "mode": "detector-level",
+      "split_use": "held_out",
+      "item_count_declared": null,
+      "count_notes": "Count and acceptance seed fixed by lead, not chosen by worker.",
+      "exposure_count": 0,
+      "synthetic": {
+        "generator": "internal/eval/pii.go",
+        "dev_seed": "dev"
+      },
+      "fetch": [
+        {
+          "url_or_path": "lead-generated:sealed-directory"
+        }
+      ],
+      "files": [
+        {
+          "path": "pending-lead-acquisition",
+          "sha256": ""
+        }
+      ],
+      "field_map": null,
+      "categories": [
+        "category::sensitive-info"
+      ]
+    }
+  ]
+}

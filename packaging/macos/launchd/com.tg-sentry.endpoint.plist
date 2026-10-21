@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Apple launchd.plist(5); Creating Launch Daemons and Agents, Table 5-1.
+     Package installation sets root:wheel ownership; no shell or daemonization. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.tg-sentry.endpoint</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/Application Support/TG-Sentry/aegishook</string>
+        <string>service</string>
+    </array>
+    <key>UserName</key>
+    <string>root</string>
+    <key>GroupName</key>
+    <string>wheel</string>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>

@@ -1,0 +1,71 @@
+{
+  "ocsf_version": "1.9.0",
+  "cloudevents_version": "1.0.2",
+  "fixtures": [
+    {
+      "file": "actor.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/actor?profiles=security_control,host",
+      "sha256": "fe158061df703050d65dcbdf0cdd192f20433bf496c3a8262fff64e2eb3c1fe7"
+    },
+    {
+      "file": "analytic.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/analytic?profiles=security_control,host",
+      "sha256": "584c83a1b40c208f3cebab266e2fe2c0c47af6eab29548c431b6005601825f3e"
+    },
+    {
+      "file": "api.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/api?profiles=security_control,host",
+      "sha256": "d99355427c81050fd5204cc554003b0dd9a62399f89b7bdea56ad0fb68533550"
+    },
+    {
+      "file": "api_activity.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/classes/api_activity?profiles=security_control,host",
+      "sha256": "88f9a2d8a3bdfc56b7078274f12e0a4224ead8e041b4ef38d32a1b7b970cfb41"
+    },
+    {
+      "file": "cloudevents.json",
+      "source": "https://raw.githubusercontent.com/cloudevents/spec/v1.0.2/cloudevents/formats/cloudevents.json",
+      "sha256": "e28a6d252d7b7238d176618f6bbf6cde570b26a867bc5241563aed34c9dd1d83"
+    },
+    {
+      "file": "detection_finding.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/classes/detection_finding?profiles=security_control,host",
+      "sha256": "68d1fdc38a4666b3271a4916d9dbf9fcb3639ba301fad33b0aa57f768feb7c72"
+    },
+    {
+      "file": "device.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/device?profiles=security_control,host",
+      "sha256": "557a415492e15cc1c914613c2fe7e979ef71b768c71087f0dfed67f9857506e5"
+    },
+    {
+      "file": "feature.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/feature?profiles=security_control,host",
+      "sha256": "48fec7276b55408b44b243c5627880055709518505c56e1df991bf4409867ac3"
+    },
+    {
+      "file": "finding_info.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/finding_info?profiles=security_control,host",
+      "sha256": "d3da0d0b7003a76d5eeaba224345a97ddcd4e86062200d7433bea7977c3202f7"
+    },
+    {
+      "file": "metadata.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/metadata?profiles=security_control,host",
+      "sha256": "dd025e12aee352f7969b07cbb7b5ded5160551b4d548a244fed7e808e4fae1bb"
+    },
+    {
+      "file": "network_endpoint.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/network_endpoint?profiles=security_control,host",
+      "sha256": "2c2e656ac6a2b29ee97766930f2ce7bf89fec888a16196e2bab9b912ab81be89"
+    },
+    {
+      "file": "product.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/product?profiles=security_control,host",
+      "sha256": "189c2220cd4b716658c2ec4a07bc7c4ec3dfc8dd360027015ebc50e5c80e712e"
+    },
+    {
+      "file": "request.json",
+      "source": "https://schema.ocsf.io/1.9.0/api/objects/request?profiles=security_control,host",
+      "sha256": "199c9e07431e0668cc025ae0f8ccc3ceeed12f65f3e1c3e8ea3ea3b9617e2a9a"
+    }
+  ]
+}

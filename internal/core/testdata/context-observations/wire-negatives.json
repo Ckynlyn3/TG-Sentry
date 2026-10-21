@@ -1,0 +1,412 @@
+[
+  {
+    "name": "sensitiveInfo missing required fields",
+    "rule": "nested",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "sensitiveInfo": {}
+    }
+  },
+  {
+    "name": "sensitiveInfo findings null",
+    "rule": "nested",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "sensitiveInfo": {
+        "findings": null,
+        "decision": "reject",
+        "unavailable": true
+      }
+    }
+  },
+  {
+    "name": "sensitiveInfo finding missing required fields",
+    "rule": "nested",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "sensitiveInfo": {
+        "findings": [
+          {}
+        ],
+        "decision": "reject",
+        "unavailable": true
+      }
+    }
+  },
+  {
+    "name": "sensitiveInfo span null",
+    "rule": "nested",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "sensitiveInfo": {
+        "findings": [
+          {
+            "category": "category::sensitive-info",
+            "tag": "secret",
+            "entityType": "private-key",
+            "score": 1.0,
+            "span": null
+          }
+        ],
+        "decision": "reject",
+        "unavailable": false
+      }
+    }
+  },
+  {
+    "name": "sensitiveInfo reason null",
+    "rule": "nested",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "sensitiveInfo": {
+        "findings": [],
+        "decision": "reject",
+        "unavailable": true,
+        "reason": null
+      }
+    }
+  },
+  {
+    "name": "present empty epoch digest",
+    "rule": "nested",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "policy_omitted",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": ""
+    }
+  },
+  {
+    "name": "payload parts null",
+    "rule": "nested",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": null
+      }
+    }
+  },
+  {
+    "name": "case alias for id",
+    "rule": "keys",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "ID": "alias-overwrite"
+    }
+  },
+  {
+    "name": "case alias for sensitiveInfo",
+    "rule": "keys",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "SensitiveInfo": {
+        "findings": [],
+        "decision": "reject",
+        "unavailable": true
+      }
+    }
+  },
+  {
+    "name": "case alias for source adapter",
+    "rule": "keys",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af",
+        "Adapter": "pi"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "case alias for instructions attribute",
+    "rule": "keys",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ],
+        "Attribute": "gen_ai.input.messages"
+      }
+    }
+  },
+  {
+    "name": "case alias for sensitiveInfo decision",
+    "rule": "keys",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "sensitiveInfo": {
+        "findings": [],
+        "decision": "reject",
+        "unavailable": true,
+        "Decision": "allow"
+      }
+    }
+  },
+  {
+    "name": "snake alias for observedAt",
+    "rule": "keys",
+    "value": {
+      "id": "openclaw-instructions",
+      "kind": "instructions",
+      "coverage": "observed",
+      "contentState": "captured",
+      "source": {
+        "adapter": "openclaw",
+        "adapterVersion": "2026.10.4",
+        "hook": "llm_input.systemPrompt",
+        "sourceRevision": "383c124cc32ffee3f8e56f549b88da94d269a4af"
+      },
+      "sessionId": "synthetic-session",
+      "instanceId": "synthetic-instance",
+      "observedAt": "2026-10-21T01:02:03Z",
+      "epochDigest": "125d1bf267b106453c503e1441f096cc32ba9d9550465deaffe934d06061ef0e",
+      "instructions": {
+        "attribute": "gen_ai.system_instructions",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Read-only workspace instructions."
+          }
+        ]
+      },
+      "observedAt_copy": "2026-10-21T01:02:03Z"
+    }
+  }
+]

@@ -1,0 +1,31 @@
+# Allow only build inputs, not .git, credentials, local data or caches.
+# Negation and last-match rules: https://docs.docker.com/build/building/context/#dockerignore-files
+*
+!go.mod
+!go.sum
+!cmd/
+!internal/
+!console/
+console/*
+!console/package.json
+!console/package-lock.json
+!console/.npmrc
+!console/index.html
+!console/tsconfig.json
+!console/vite.config.ts
+!console/tailwind.config.ts
+!console/postcss.config.cjs
+!console/playwright.config.ts
+!console/src/
+!console/public/
+# tsconfig.json includes e2e: npm run build typechecks these sources too.
+!console/e2e/
+# console/e2e/server.spec.ts imports this typed fixture.
+!scripts/test-oidc.mjs
+!scripts/test-oidc.d.mts
+# Never ship local dependencies, generated output or test artifacts in the context.
+**/node_modules
+**/dist
+**/test-results
+**/playwright-report
+**/.cache

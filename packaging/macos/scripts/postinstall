@@ -1,0 +1,68 @@
+#!/bin/bash
+set -eu
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+export PATH
+root='/Library/Application Support/TG-Sentry'
+plist=/Library/LaunchDaemons/com.tg-sentry.endpoint.plist
+label=system/com.tg-sentry.endpoint
+fail() { printf '%s\n' "$1" >&2; exit 1; }
+[ "$(id -u)" -eq 0 ] || fail 'installation requires root'
+[ "${3:-}" = / ] || fail 'only the running system volume is supported'
+# core validates the private tree BEFORE reading config.json/setup-code. Default
+# PKG install has no MSI snapshot and NEVER commits implicitly. Suppress CLI
+# output so enrollment material cannot enter Installer/MDM logs.
+terminal=false
+if [ -d "$root/private/rollback.cleanup" ] || [ -f "$root/private/rollback/.committed" ] || [ -f "$root/private/rollback/.rolled-back" ]; then
+    terminal=true
+fi
+if ! "$root/aegishook" ctl system-install >/dev/null 2>&1; then
+    fail 'machine installation failed; private retry state retained'
+fi
+# Core's first entry with a terminal snapshot only disposes it. Re-enter to
+# refresh the installed binary manifest after an interrupted upgrade cleanup.
+if "$terminal"; then
+    if ! "$root/aegishook" ctl system-install >/dev/null 2>&1; then
+        fail 'machine installation after terminal cleanup failed; retry state retained'
+    fi
+fi
+# Apple launchctl(1); KeepAlive starts the foreground daemon. No load/unload.
+# https://keith.github.io/xcode-man-pages/launchctl.1.html
+if ! /bin/launchctl print "$label" >/dev/null 2>&1; then
+    /bin/launchctl bootstrap system "$plist"
+fi
+# NAMED LOCAL EXCEPTION READINESS_TIMEOUT_SECONDS: 25s = startup enrollment's
+# 15s (internal/core/machine_install.go, MachineEnrolledContext; called before
+# listen in internal/service/service_unix.go) + launchd's default 10s throttle:
+# https://keith.github.io/xcode-man-pages/launchd.plist.5.html#ThrottleInterval
+# Poll cadence reuses scripts/test-store.sh. CLOCK_MONOTONIC accounts for time
+# spent descheduled and ignores wall-clock corrections (not a sleep counter):
+# https://perldoc.perl.org/Time::HiRes#clock_gettime
+readonly READINESS_TIMEOUT_SECONDS=25
+if ! /usr/bin/perl -MTime::HiRes=clock_gettime,CLOCK_MONOTONIC,sleep -e '
+    my ($path, $budget) = @ARGV;
+    my $deadline = clock_gettime(CLOCK_MONOTONIC) + $budget;
+    while (1) {
+        my $remaining = $deadline - clock_gettime(CLOCK_MONOTONIC);
+        exit 1 if $remaining <= 0;
+        exit 0 if -S $path;
+        sleep($remaining < 1 ? $remaining : 1);
+    }
+' "$root/run/ctl.sock" "$READINESS_TIMEOUT_SECONDS"; then
+    fail 'daemon readiness timed out; retry state retained'
+fi
+status=0
+"$root/aegishook" ctl status --require enrolled >/dev/null 2>&1 || status=$?
+case "$status" in
+    0)
+        # Binding S0/S1 disposition: explicit commit ONLY after live enrolled status.
+        if ! "$root/aegishook" ctl commit >/dev/null 2>&1; then
+            fail 'commit cleanup incomplete; retry or enrolled repair required'
+        fi
+        ;;
+    30)
+        # No setup-code is a supported unprovisioned install. Do not finalize any
+        # retry credential; detection must still require enrolled (MDM contract).
+        printf '%s\n' 'Installed but not enrolled; private retry state retained.'
+        ;;
+    *) fail 'enrollment status unavailable; private retry state retained' ;;
+esac

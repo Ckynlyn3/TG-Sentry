@@ -1,0 +1,20 @@
+{
+  "client": "cursor",
+  "version": "UNVERIFIED",
+  "event": "postToolUse",
+  "input": {
+    "hook_event_name": "postToolUse",
+    "conversation_id": "conversation-fixture",
+    "tool_name": "Shell",
+    "tool_use_id": "call-fixture",
+    "tool_output": "{\"stdout\":\"fixture@example.invalid\",\"exitCode\":0}"
+  },
+  "response": {},
+  "replacement": {
+    "hook_event_name": "postToolUse",
+    "conversation_id": "conversation-fixture",
+    "tool_name": "Shell",
+    "tool_use_id": "call-fixture",
+    "tool_output": "{\"stdout\":\"fixture@example.invalid\",\"exitCode\":0}"
+  }
+}

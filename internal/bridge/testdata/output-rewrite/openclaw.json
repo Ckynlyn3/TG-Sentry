@@ -1,0 +1,71 @@
+{
+  "client": "openclaw",
+  "version": "2026.10.4",
+  "event": "tool_result_persist",
+  "input": {
+    "toolName": "fixture_read",
+    "toolCallId": "call-fixture",
+    "isSynthetic": true,
+    "message": {
+      "role": "toolResult",
+      "toolName": "fixture_read",
+      "toolCallId": "call-fixture",
+      "content": [
+        {
+          "type": "text",
+          "text": "fixture@example.invalid"
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": true,
+      "timestamp": 0
+    }
+  },
+  "response": {
+    "message": {
+      "role": "toolResult",
+      "toolName": "fixture_read",
+      "toolCallId": "call-fixture",
+      "content": [
+        {
+          "type": "text",
+          "text": "[EMAIL_ADDRESS]"
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": true,
+      "timestamp": 0
+    }
+  },
+  "replacement": {
+    "toolName": "fixture_read",
+    "toolCallId": "call-fixture",
+    "isSynthetic": true,
+    "message": {
+      "role": "toolResult",
+      "toolName": "fixture_read",
+      "toolCallId": "call-fixture",
+      "content": [
+        {
+          "type": "text",
+          "text": "[EMAIL_ADDRESS]"
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": true,
+      "timestamp": 0
+    }
+  }
+}

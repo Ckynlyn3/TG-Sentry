@@ -1,0 +1,19 @@
+# systemd.service(5): foreground daemon; issue #37 fixes the restart policy.
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html
+[Unit]
+Description=TG-Sentry Endpoint
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/opt/tg-sentry/aegishook service
+Restart=always
+RestartSec=5
+# systemd.exec(5): /var/opt remains writable; preserve kernel-UID socket access.
+# https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html
+NoNewPrivileges=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

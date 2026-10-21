@@ -1,0 +1,64 @@
+{
+  "client": "claude",
+  "version": "UNVERIFIED",
+  "event": "PostToolUse",
+  "input": {
+    "hook_event_name": "PostToolUse",
+    "session_id": "session-fixture",
+    "tool_use_id": "call-fixture",
+    "tool_name": "mcp__fixture__read",
+    "tool_response": {
+      "content": [
+        {
+          "type": "text",
+          "text": "fixture@example.invalid"
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": false
+    }
+  },
+  "response": {
+    "hookSpecificOutput": {
+      "hookEventName": "PostToolUse",
+      "updatedToolOutput": {
+        "content": [
+          {
+            "type": "text",
+            "text": "[EMAIL_ADDRESS]"
+          },
+          {
+            "type": "image",
+            "mimeType": "image/png",
+            "data": "c3ludGhldGljLWZpeHR1cmU="
+          }
+        ],
+        "isError": false
+      }
+    }
+  },
+  "replacement": {
+    "hook_event_name": "PostToolUse",
+    "session_id": "session-fixture",
+    "tool_use_id": "call-fixture",
+    "tool_name": "mcp__fixture__read",
+    "tool_response": {
+      "content": [
+        {
+          "type": "text",
+          "text": "[EMAIL_ADDRESS]"
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": false
+    }
+  }
+}

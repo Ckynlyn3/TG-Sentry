@@ -1,0 +1,24 @@
+{
+  "client": "codex",
+  "version": "UNVERIFIED",
+  "event": "PostToolUse",
+  "input": {
+    "hook_event_name": "PostToolUse",
+    "session_id": "session-fixture",
+    "tool_use_id": "call-fixture",
+    "tool_response": {
+      "stdout": "fixture@example.invalid",
+      "exit_code": 0
+    }
+  },
+  "response": {},
+  "replacement": {
+    "hook_event_name": "PostToolUse",
+    "session_id": "session-fixture",
+    "tool_use_id": "call-fixture",
+    "tool_response": {
+      "stdout": "fixture@example.invalid",
+      "exit_code": 0
+    }
+  }
+}

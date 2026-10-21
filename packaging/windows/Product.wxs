@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WiX v5 uses the v4 namespace; Package has no Id.
+     https://docs.firegiant.com/wix/schema/wxs/package/
+     Stable local product identity: RFC 9562 UUIDv5(DNS, com.tg-sentry.endpoint).
+     Provision through protected ProgramData\TG-Sentry\private\config.json and
+     setup-code (ctl.go); never put a setup code in MSI properties or arguments. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="TG-Sentry Endpoint" Manufacturer="TG-Sentry" Version="$(var.Version)"
+           UpgradeCode="711087B1-08D6-505F-A81C-B348CDFA5D0F" Scope="perMachine" InstallerVersion="500">
+    <!-- D3: old-product removal is inside the MSI transaction, before new files. -->
+    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer TG-Sentry Endpoint is already installed." />
+    <Launch Condition="NOT RollbackDisabled" Message="TG-Sentry Endpoint requires Windows Installer rollback to be enabled." />
+    <MediaTemplate EmbedCab="yes" />
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="TG-Sentry">
+        <Component Id="Endpoint" Guid="*" Bitness="always64">
+          <File Id="EndpointExe" Source="$(var.Payload)" Name="aegishook.exe" KeyPath="yes" />
+          <!-- Must equal internal/service/service_windows.go serviceName/DisplayName. -->
+          <ServiceInstall Id="EndpointService" Name="TGSentryEndpoint" DisplayName="TG-Sentry Endpoint"
+                          Type="ownProcess" Start="auto" ErrorControl="normal" Vital="yes"
+                          Account="LocalSystem" Arguments="service">
+            <!-- Issue #33 / plan 3.7: reset seconds, delays milliseconds.
+                 https://docs.firegiant.com/wix/schema/wxs/serviceconfigfailureactions/ -->
+            <ServiceConfigFailureActions OnInstall="yes" OnReinstall="yes" ResetPeriod="86400">
+              <Failure Action="restartService" Delay="5000" />
+              <Failure Action="restartService" Delay="10000" />
+              <Failure Action="restartService" Delay="30000" />
+            </ServiceConfigFailureActions>
+            <!-- Enable SERVICE_CONFIG_FAILURE_ACTIONS_FLAG before first startup.
+                 https://docs.firegiant.com/wix/schema/wxs/serviceconfig/#attributes
+                 FailureActionsWhen=failedToStopOrReturnedError maps to 1 in v5.0.2
+                 Compiler_Package.cs. Native MsiConfigureServices has documented
+                 limitations; keep the S2 runtime setter and verify on Windows. -->
+            <ServiceConfig OnInstall="yes" OnReinstall="yes" FailureActionsWhen="failedToStopOrReturnedError" />
+          </ServiceInstall>
+          <ServiceControl Id="EndpointControl" Name="TGSentryEndpoint" Start="install" Stop="both" Remove="uninstall" Wait="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+    <Feature Id="EndpointFeature" Title="TG-Sentry Endpoint" Level="1">
+      <ComponentRef Id="Endpoint" />
+    </Feature>
+    <!-- D3: elevated installed-file CAs; no shell, user-supplied flags or secrets.
+         https://docs.firegiant.com/wix/schema/wxs/customaction/
+         https://learn.microsoft.com/en-us/windows/win32/msi/rollback-custom-actions
+         https://learn.microsoft.com/en-us/windows/win32/msi/commit-custom-actions -->
+    <CustomAction Id="CtlRollback" FileRef="EndpointExe" ExeCommand="ctl rollback" Execute="rollback" Impersonate="no" HideTarget="yes" Return="check" />
+    <CustomAction Id="CtlInstall" FileRef="EndpointExe" ExeCommand="ctl system-install --no-commit" Execute="deferred" Impersonate="no" HideTarget="yes" Return="check" />
+    <!-- A commit failure cannot undo its own filesystem changes (D3). -->
+    <CustomAction Id="CtlCommit" FileRef="EndpointExe" ExeCommand="ctl commit" Execute="commit" Impersonate="no" HideTarget="yes" Return="ignore" />
+    <CustomAction Id="CtlUninstall" FileRef="EndpointExe" ExeCommand="ctl system-uninstall" Execute="deferred" Impersonate="no" HideTarget="yes" Return="check" />
+    <InstallExecuteSequence>
+      <Custom Action="CtlRollback" After="InstallFiles" Condition="NOT Installed" />
+      <Custom Action="CtlInstall" After="CtlRollback" Condition="NOT Installed" />
+      <Custom Action="CtlCommit" After="CtlInstall" Condition="NOT Installed" />
+      <!-- Stop first; refuse before DeleteServices/RemoveFiles; MSI restarts on rollback.
+           https://learn.microsoft.com/en-us/windows/win32/msi/upgradingproductcode -->
+      <Custom Action="CtlUninstall" After="StopServices" Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+    </InstallExecuteSequence>
+  </Package>
+</Wix>

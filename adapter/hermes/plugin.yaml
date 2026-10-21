@@ -1,0 +1,6 @@
+name: tg-sentry
+version: "0.1.0"
+description: "Fail-closed TG-Sentry review of every tool call through the AegisHook HTTP decision API. Denies the tool call when the decision service rejects, is unavailable, or does not answer inside the total budget."
+author: "CLTG"
+provides_hooks:
+  - pre_tool_call

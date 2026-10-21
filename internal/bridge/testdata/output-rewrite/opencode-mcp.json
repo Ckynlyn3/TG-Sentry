@@ -1,0 +1,83 @@
+{
+  "client": "opencode",
+  "version": "v1.3.0",
+  "event": "tool.execute.after",
+  "input": {
+    "tool": "fixture_read",
+    "sessionID": "session-fixture",
+    "callID": "call-fixture",
+    "output": {
+      "content": [
+        {
+          "type": "text",
+          "text": "fixture@example.invalid"
+        },
+        {
+          "type": "resource",
+          "resource": {
+            "uri": "fixture://result",
+            "mimeType": "text/plain",
+            "text": "fixture@example.invalid"
+          }
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": false
+    }
+  },
+  "response": {
+    "output": {
+      "content": [
+        {
+          "type": "text",
+          "text": "[EMAIL_ADDRESS]"
+        },
+        {
+          "type": "resource",
+          "resource": {
+            "uri": "fixture://result",
+            "mimeType": "text/plain",
+            "text": "[EMAIL_ADDRESS]"
+          }
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": false
+    }
+  },
+  "replacement": {
+    "tool": "fixture_read",
+    "sessionID": "session-fixture",
+    "callID": "call-fixture",
+    "output": {
+      "content": [
+        {
+          "type": "text",
+          "text": "[EMAIL_ADDRESS]"
+        },
+        {
+          "type": "resource",
+          "resource": {
+            "uri": "fixture://result",
+            "mimeType": "text/plain",
+            "text": "[EMAIL_ADDRESS]"
+          }
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": false
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "client": "cursor",
+  "version": "UNVERIFIED",
+  "event": "postToolUse",
+  "input": {
+    "hook_event_name": "postToolUse",
+    "conversation_id": "conversation-fixture",
+    "tool_use_id": "call-fixture",
+    "tool_name": "MCP:fixture_read",
+    "tool_output": "{\"content\":[{\"type\":\"text\",\"text\":\"fixture@example.invalid\"},{\"type\":\"resource\",\"resource\":{\"uri\":\"fixture://result\",\"mimeType\":\"text/plain\",\"text\":\"fixture@example.invalid\"}},{\"type\":\"image\",\"mimeType\":\"image/png\",\"data\":\"c3ludGhldGljLWZpeHR1cmU=\"}],\"isError\":false}"
+  },
+  "response": {
+    "updated_mcp_tool_output": {
+      "content": [
+        {
+          "type": "text",
+          "text": "[EMAIL_ADDRESS]"
+        },
+        {
+          "type": "resource",
+          "resource": {
+            "uri": "fixture://result",
+            "mimeType": "text/plain",
+            "text": "[EMAIL_ADDRESS]"
+          }
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": false
+    }
+  },
+  "replacement": {
+    "hook_event_name": "postToolUse",
+    "conversation_id": "conversation-fixture",
+    "tool_use_id": "call-fixture",
+    "tool_name": "MCP:fixture_read",
+    "tool_output": {
+      "content": [
+        {
+          "type": "text",
+          "text": "[EMAIL_ADDRESS]"
+        },
+        {
+          "type": "resource",
+          "resource": {
+            "uri": "fixture://result",
+            "mimeType": "text/plain",
+            "text": "[EMAIL_ADDRESS]"
+          }
+        },
+        {
+          "type": "image",
+          "mimeType": "image/png",
+          "data": "c3ludGhldGljLWZpeHR1cmU="
+        }
+      ],
+      "isError": false
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "client": "opencode",
+  "version": "v1.3.0",
+  "event": "tool.execute.after",
+  "input": {
+    "tool": "bash",
+    "sessionID": "session-fixture",
+    "callID": "call-fixture",
+    "output": {
+      "title": "fixture command",
+      "output": "fixture@example.invalid",
+      "metadata": {
+        "exit": 0
+      },
+      "attachments": [
+        {
+          "id": "attachment-fixture",
+          "sessionID": "session-fixture",
+          "messageID": "message-fixture",
+          "type": "file",
+          "mime": "image/png",
+          "url": "fixture://image"
+        }
+      ]
+    }
+  },
+  "response": {
+    "output": {
+      "title": "fixture command",
+      "output": "[EMAIL_ADDRESS]",
+      "metadata": {
+        "exit": 0
+      },
+      "attachments": [
+        {
+          "id": "attachment-fixture",
+          "sessionID": "session-fixture",
+          "messageID": "message-fixture",
+          "type": "file",
+          "mime": "image/png",
+          "url": "fixture://image"
+        }
+      ]
+    }
+  },
+  "replacement": {
+    "tool": "bash",
+    "sessionID": "session-fixture",
+    "callID": "call-fixture",
+    "output": {
+      "title": "fixture command",
+      "output": "[EMAIL_ADDRESS]",
+      "metadata": {
+        "exit": 0
+      },
+      "attachments": [
+        {
+          "id": "attachment-fixture",
+          "sessionID": "session-fixture",
+          "messageID": "message-fixture",
+          "type": "file",
+          "mime": "image/png",
+          "url": "fixture://image"
+        }
+      ]
+    }
+  }
+}

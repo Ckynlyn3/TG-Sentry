@@ -1,0 +1,476 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Structural schema; runtime semantic, freeze, digests and admissibility gates in internal/eval/config.go also apply.",
+  "properties": {
+    "catalog_sha256": {
+      "type": "string"
+    },
+    "components": {
+      "additionalProperties": {},
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "cpu_count": {
+      "type": "integer"
+    },
+    "digests": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "environment": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "gomaxprocs": {
+      "type": "integer"
+    },
+    "host_class": {
+      "type": "string"
+    },
+    "judge_seed_supported": {
+      "type": "boolean"
+    },
+    "label_mapping": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "lambda": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nsfa_enforce": {
+      "type": "boolean"
+    },
+    "poll_interval_ms": {
+      "type": "integer"
+    },
+    "rules": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "builtin": {
+            "type": "boolean"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "decision": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "field": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "matcher": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "scopeOnly": {
+            "type": "boolean"
+          },
+          "semantics": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "checks": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "examples": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "argumentsObj": {
+                          "additionalProperties": {},
+                          "type": [
+                            "object",
+                            "null"
+                          ]
+                        },
+                        "tool": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "tool",
+                        "argumentsObj"
+                      ],
+                      "type": "object"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "limits": {
+                    "type": "string"
+                  },
+                  "summary": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "summary",
+                  "checks",
+                  "examples",
+                  "limits"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "severity": {
+            "type": "string"
+          },
+          "sourceRuleId": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "templateId": {
+            "type": "string"
+          },
+          "templateRevision": {
+            "type": "integer"
+          },
+          "tool": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "decision",
+          "enabled",
+          "builtin",
+          "tool",
+          "field",
+          "pattern",
+          "matcher",
+          "target",
+          "priority",
+          "message"
+        ],
+        "type": "object"
+      },
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "rules_sha256": {
+      "type": "string"
+    },
+    "scopes": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "string"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "platform": {
+            "type": "string"
+          },
+          "project": {
+            "type": "string"
+          },
+          "ruleIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "targets": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "project",
+          "targets",
+          "paths"
+        ],
+        "type": "object"
+      },
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "settings": {
+      "additionalProperties": false,
+      "properties": {
+        "approvalSeconds": {
+          "type": "integer"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "model": {
+          "additionalProperties": false,
+          "properties": {
+            "baseUrl": {
+              "type": "string"
+            },
+            "hasKey": {
+              "type": "boolean"
+            },
+            "model": {
+              "type": "string"
+            },
+            "pricing": {
+              "additionalProperties": false,
+              "properties": {
+                "cacheRead": {
+                  "type": "number"
+                },
+                "cacheWrite": {
+                  "type": "number"
+                },
+                "currency": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "input": {
+                  "type": "number"
+                },
+                "output": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "enabled",
+                "currency",
+                "input",
+                "output",
+                "cacheRead",
+                "cacheWrite"
+              ],
+              "type": "object"
+            },
+            "protocol": {
+              "type": "string"
+            },
+            "tested": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "pricing",
+            "protocol",
+            "baseUrl",
+            "model",
+            "hasKey",
+            "tested"
+          ],
+          "type": "object"
+        },
+        "modelSeconds": {
+          "type": "integer"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mode",
+        "model",
+        "prompt",
+        "version",
+        "approvalSeconds",
+        "modelSeconds"
+      ],
+      "type": "object"
+    },
+    "tag_mapping": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": [
+          "array",
+          "null"
+        ]
+      },
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "thresholds": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bound": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "dataset": {
+            "type": "string"
+          },
+          "entity_type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string"
+          },
+          "report_only": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string"
+          },
+          "variant": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "dataset",
+          "category",
+          "language",
+          "metric",
+          "operator",
+          "bound",
+          "report_only",
+          "source"
+        ],
+        "type": "object"
+      },
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "version": {
+      "const": 1
+    }
+  },
+  "required": [
+    "version",
+    "settings",
+    "rules",
+    "scopes",
+    "rules_sha256",
+    "catalog_sha256",
+    "digests",
+    "components",
+    "environment",
+    "tag_mapping",
+    "label_mapping",
+    "thresholds",
+    "gomaxprocs",
+    "cpu_count",
+    "host_class",
+    "lambda",
+    "nsfa_enforce",
+    "judge_seed_supported",
+    "poll_interval_ms"
+  ],
+  "title": "TG-Sentry eval config",
+  "type": "object"
+}
